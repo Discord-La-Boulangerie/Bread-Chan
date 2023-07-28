@@ -1,12 +1,11 @@
 #imports
-import discord, os, datetime, random
+import discord, os, datetime, random, sys
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from typing import Optional
-import sys
 from discord.gateway import DiscordWebSocket, _log
-
+from neuralintents import GenericAssistant
 #paramètres
 
 #mobile status
@@ -85,6 +84,14 @@ async def pingpong(interaction: discord.Interaction):
     emb.set_author(name=client.user.display_name, icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
     emb.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
+
+@client.event
+async def on_message(message: discord.Message):
+    if message.author == client.user:
+        return
+    
+    if message.content.startswith(f"<@1134152544554336256>"):
+        pass
 
 #login check + bot login events
 @client.event
