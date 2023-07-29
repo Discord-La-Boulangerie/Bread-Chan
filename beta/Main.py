@@ -73,6 +73,9 @@ red = discord.Color.from_rgb(200, 0, 0)
 green = discord.Color.from_rgb(0, 200, 0)
 discord_blue = discord.Color.from_rgb(84, 102, 244)
 DiscordWebSocket.identify = identify
+chatbot = GenericAssistant("./intents.json")
+chatbot.train_model()
+chatbot.save_model()
 
 ##commands
 #ping
@@ -91,8 +94,8 @@ async def on_message(message: discord.Message):
         return
     
     if message.content.startswith(f"<@1134152544554336256>"):
-        pass
-
+        response = chatbot.request(message.content[7:])
+        await message.reply(response)
 #login check + bot login events
 @client.event
 async def on_ready():
