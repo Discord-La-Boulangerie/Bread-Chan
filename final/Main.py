@@ -180,9 +180,17 @@ class test2(discord.ui.Modal, title=f"signalement"):
 #send embed to mod chat
         await channel.send(embed=emb) #type: ignore
 
-@client.tree.context_menu(name="profil")
-async def pfp(interaction: discord.Interaction, user: discord.Member):
-    await interaction.response.send_message(f"voici la photo de profil de {user.global_name}:\n{user.display_avatar}", ephemeral=True)
+@client.tree.context_menu(name="profil", guild=guild_id1)
+async def badges(interaction: discord.Interaction, user: discord.Member):
+# Remove unnecessary characters
+    badges_class = str(user.public_flags.all()).replace('[<', '').replace("UserFlags.","").replace('>]', '').replace('_', ' ').replace(':', '').replace(">","").replace("<","").title()
+
+    # Remove digits from string
+    badges_class = ''.join([i for i in badges_class if not i.isdigit()])
+    # Output
+    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.date()} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
+    emb.set_thumbnail(url=user.display_avatar)
+    await interaction.response.send_message(embed=emb, ephemeral=True)
 
 #sanctions system
 @client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
