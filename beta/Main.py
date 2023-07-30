@@ -1,11 +1,10 @@
 #imports
-import discord, os, datetime, random, sys
+import discord, os, datetime, random, sys, json
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from typing import Optional
 from discord.gateway import DiscordWebSocket, _log
-import json
 #paramètres
 
 #mobile status
