@@ -215,7 +215,7 @@ async def test(interaction: discord.Interaction):
     req = requests.get(f"https://discord.com/api/v9/users/{interaction.user.id}", headers=headers)
     pprint.pprint(req.json())
     print(interaction.user)
-    await interaction.response.send_message(req.json())
+    await interaction.response.send_message(req.json(), ephemeral=True)
 #auto events
 
 @client.event
