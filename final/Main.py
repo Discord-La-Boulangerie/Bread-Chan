@@ -211,10 +211,9 @@ async def sync(interaction: discord.Interaction):
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
 
 @client.tree.command(name="test", description="test", guild=guild_id1)
+@app_commands.default_permissions(manage_guild=True)
 async def test(interaction: discord.Interaction):
     req = requests.get(f"https://discord.com/api/v9/users/{interaction.user.id}", headers=headers)
-    pprint.pprint(req.json())
-    print(interaction.user)
     await interaction.response.send_message(req.json(), ephemeral=True)
 #auto events
 
