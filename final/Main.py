@@ -257,7 +257,7 @@ async def on_message(message: discord.Message):
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
-            await message.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
+            await message.reply(content=f"[résolution du lien :]({vxTiktokResolver})", mention_author=False)
 
 
 
