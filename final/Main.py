@@ -253,7 +253,15 @@ async def on_message(message: discord.Message):
             if message.content.startswith(f"t'as les {word2[i]}"):  #Verifie si la combinaison est dans le message
                 await message.reply("https://didnt-a.sk/")
                 break
-        
+    word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
+    for i in range(len(word2)):    #Check pour chaque combinaison
+        if word2[i] in message.content:
+            vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
+            await message.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
+
+
+
+
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():

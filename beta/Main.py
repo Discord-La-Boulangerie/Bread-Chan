@@ -172,6 +172,13 @@ async def on_message(msg: discord.Message):
                 "entry3",
                 ]
             await msg.reply(rand[random.randint(0, 3)])
+    
+    word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
+    for i in range(len(word2)):    #Check pour chaque combinaison
+        if word2[i] in msg.content:
+            vxTiktokResolver = str(msg.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
+            await msg.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
+
 
 #login check + bot login events
 @client.event
