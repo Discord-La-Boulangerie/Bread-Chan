@@ -1,10 +1,11 @@
 #imports
-import discord, os, datetime, random, sys, json
+import discord, os, datetime, random, sys, json, time
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from typing import Optional
 from discord.gateway import DiscordWebSocket, _log
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 #paramètres
 
 #mobile status
@@ -93,9 +94,9 @@ async def badges(interaction: discord.Interaction, user: discord.Member):
 
     # Remove digits from string
     badges_class = ''.join([i for i in badges_class if not i.isdigit()])
-    activ = user.activity
+    
     # Output
-    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.date()} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}\nActivité :\n> {activ}", color=user.color)
+    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.date()} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
     emb.set_thumbnail(url=user.display_avatar)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
@@ -113,6 +114,25 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
     elif (choix.value == 'guild'):
         await client.tree.sync(guild=guild_id)
         await interaction.response.send_message("le tree du serveur a bien été synchronisé", ephemeral=True)
+@client.tree.command(name="snap", description="test", guild=guild_id)
+async def snap(interaction: discord.Interaction):
+    filename = f"{interaction.user.display_name}.webp"
+    await interaction.user.avatar.save(filename)
+    avatar = Image.open(filename).convert('RGB')
+    avatar = avatar.resize((285, 285))
+    bigsize = (avatar.size[0] * 3,  avatar.size[1] * 3)
+    mask = Image.new('L', bigsize, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0) + bigsize, fill=255)
+    mask = mask.resize(avatar.size)
+    avatar.putalpha(mask)
+
+    output = ImageOps.fit(avatar, mask.size, centering=(1420, 298))
+    output.putalpha(mask)
+    output.save(f'{interaction.user.name}.webp')
+    files = discord.File(fp=filename)
+    await interaction.response.send_message(file=files, ephemeral=True)
+    time.sleep(5)
 
 @client.tree.command(name="uid_save", description="[FUN][INFO] enregistre ton UID Genshin Impact", guild=guild_id)
 @app_commands.describe(amount="l'UID de ton compte Genshin Impact")
@@ -133,8 +153,6 @@ async def add_score(interaction: discord.Interaction, amount: int):
         json.dump(data, fp, sort_keys=True, indent=4) # kwargs for beautification
         await interaction.response.send_message(f"ton UID a bien été modifiée!\n> UID : {amount}", ephemeral=True)
    # you can also return the new/updated score here if you want
-
-
 
 @client.event
 async def on_message(msg: discord.Message):

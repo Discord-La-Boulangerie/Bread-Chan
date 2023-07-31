@@ -1,5 +1,5 @@
 #imports
-import discord, os, datetime, random
+import discord, os, datetime, random, requests, pprint
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
@@ -79,6 +79,7 @@ guild_id1 = discord.Object(id=guild_id)
 botlink="https://discordapp.com/users/793183664858071040"
 boticonurl="https://cdn.discordapp.com/avatars/1102573935658283038/872ee23bdd10cf835335bd98a5981bc2.webp?size=128"
 DiscordWebSocket.identify = identify
+headers = {"Authorization": f"Bot {os.getenv('discord_token')}"}
 # Set up the OpenAI API client
 
 ##commands
@@ -89,31 +90,6 @@ async def pingpong(interaction: discord.Interaction):
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
     emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
-
-#link system
-@client.tree.command(name="links", description="[INFO][BETA] donne les différents liens de la Secte du Pain")
-@app_commands.choices(choix=[
-    app_commands.Choice(name="Twitter", value="twitter"),
-    app_commands.Choice(name="Invite", value="invite"),
-    app_commands.Choice(name="Website", value="website"),
-    ])
-async def links(interaction: discord.Interaction, choix: app_commands.Choice[str]):
-    if (choix.value == 'twitter'):
-        emb=discord.Embed(title="lien du Twitter de la Secte", description="https://twitter.com/Wishrito123038", color=blue, timestamp=datetime.datetime.now())
-        emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
-        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
-        await interaction.response.send_message(embed=emb, ephemeral=True)
-    elif (choix.value == 'invite'):
-        emb=discord.Embed(title="Invitation du serveur", description="", color = discord_blue, timestamp=datetime.datetime.now())
-        emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
-        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
-        await interaction.response.send_message("https://discord.gg/qGBhRBGWF3", embed=emb, ephemeral=True)
-    else:
-        emb=discord.Embed(title="Lien du site Web", description=f"fait par 🥖Commande Wish (Bread CM) : https://sites.google.com/view/sectedupain/", color = discord_blue, timestamp=datetime.datetime.now())
-        emb.set_image(url="https://cdn.discordapp.com/attachments/1115979542474014840/1116485136788238356/IMG_3348.gif")
-        emb.set_author(name="BreadBot", url=f"{botlink}", icon_url=f"{boticonurl}") # type: ignore
-        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore                     
-        await interaction.response.send_message(embed=emb, ephemeral=True)
 
 #staff app system
 class staff(discord.ui.Modal, title="Candidature"):
@@ -180,18 +156,28 @@ class test2(discord.ui.Modal, title=f"signalement"):
 #send embed to mod chat
         await channel.send(embed=emb) #type: ignore
 
-@client.tree.context_menu(name="profil", guild=guild_id1)
+@client.tree.context_menu(name="Profil", guild=guild_id1)
 async def badges(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
     badges_class = str(user.public_flags.all()).replace('[<', '').replace("UserFlags.","").replace('>]', '').replace('_', ' ').replace(':', '').replace(">","").replace("<","").title()
 
     # Remove digits from string
     badges_class = ''.join([i for i in badges_class if not i.isdigit()])
+    
     # Output
-    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.date()} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
-    emb.set_thumbnail(url=user.display_avatar)
-    await interaction.response.send_message(embed=emb, ephemeral=True)
+    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
+    emb.set_thumbnail(url=user.display_avatar,)
+    await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url))
+class SimpleView(discord.ui.View):
+    def __init__(self, url):
+        super().__init__()
+        
+        # Link buttons cannot be made with the decorator
+        # Therefore we have to manually create one.
+        # We add the quoted url to the button, and add the button to the view.
+        self.add_item(discord.ui.Button(label='Clique ici', url=url))
 
+        return
 #sanctions system
 @client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.rename(member="membre")
@@ -203,7 +189,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
     await member.kick(reason=reason)
     await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
     channel = await client.fetch_channel(1130945537907114139)
-    await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.global_name}",view=cheh()) # type: ignore
+    await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") # type: ignore
 
 @client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié")
 @app_commands.rename(member="membre")
@@ -215,7 +201,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     await member.kick(reason=reason)
     await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
     channel = await client.fetch_channel(1130945537907114139)
-    await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.global_name}",view=cheh()) #type: ignore
+    await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
 
 @client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
 @app_commands.default_permissions(manage_guild=True)
@@ -224,19 +210,28 @@ async def sync(interaction: discord.Interaction):
     await client.tree.sync()
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
 
+@client.tree.command(name="test", description="test", guild=guild_id1)
+async def test(interaction: discord.Interaction):
+    req = requests.get(f"https://discord.com/api/v9/users/{interaction.user.id}", headers=headers)
+    pprint.pprint(req.json())
+    print(interaction.user)
+    await interaction.response.send_message(req.json())
 #auto events
+
 @client.event
 async def on_member_remove(member: discord.Member):
     channel=client.get_channel(1130945537907114139)
-    emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.global_name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = red, timestamp=datetime.datetime.now())
+    emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = red, timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
-    emb.set_footer(text=f"{member.global_name}, sur {member.guild.name}", icon_url=member.guild.icon)       
+    emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)       
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+
+
 @client.event 
 async def on_member_join(member: discord.Member):
-    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.global_name}! <:Chad:1115629188049813534> :french_bread:\npour commencer, va dans https://discord.com/channels/1130945537181499542/1130945537907114140 et effectue la commande </captcha:1131468501870182436>", color = green, timestamp=datetime.datetime.now())
+    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.name}! <:Chad:1115629188049813534> :french_bread:\npour commencer, va dans https://discord.com/channels/1130945537181499542/1130945537907114140 et effectue la commande </captcha:1131468501870182436>", color = green, timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
-    emb.set_footer(text=f"{member.global_name}, sur {member.guild.name}", icon_url=member.guild.icon)            
+    emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)            
     channel = client.get_channel(1130945537907114139)
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
 
@@ -316,6 +311,6 @@ async def changepresence():
 async def on_ready():
     print("="*10 + " Build Infos " + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
-    print(f"Discord info : {discord.version_info.releaselevel}")
+    print(f"Discord info : {discord.version_info.serial}")
     await changepresence.start()
 client.run(DISCORD_TOKEN)  # type: ignore
