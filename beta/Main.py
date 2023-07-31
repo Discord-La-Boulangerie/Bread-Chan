@@ -116,9 +116,9 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
         await interaction.response.send_message("le tree du serveur a bien été synchronisé", ephemeral=True)
 @client.tree.command(name="snap", description="test", guild=guild_id)
 async def snap(interaction: discord.Interaction):
-    pfp = f"{interaction.user.display_name}.webp"
-    await interaction.user.avatar.save(pfp)
-    avatar = Image.open(pfp).convert('RGB')
+    filename = f"{interaction.user.display_name}.webp"
+    await interaction.user.avatar.save(filename)
+    avatar = Image.open(filename).convert('RGB')
     avatar = avatar.resize((285, 285))
     bigsize = (avatar.size[0] * 3,  avatar.size[1] * 3)
     mask = Image.new('L', bigsize, 0)
@@ -131,14 +131,7 @@ async def snap(interaction: discord.Interaction):
     output.putalpha(mask)
     output.save(f'{interaction.user.name}.webp')
 
-    im1 = Image.open('PIL files/banners/base.png')
-    im2 = Image.open(pfp)
-    back_im = im1.copy()
-    back_im.paste(im2, (429,529))
-    back_im.save(f'PIL files/banners/bienvenue {interaction.user.name}.png', quality=95)
-    banner = f'PIL files/banners/bienvenue {interaction.user.name}.png'
-
-    files = discord.File(fp=banner)
+    files = discord.File(fp=filename)
     await interaction.response.send_message(file=files, ephemeral=True)
     time.sleep(5)
 
