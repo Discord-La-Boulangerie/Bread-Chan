@@ -76,7 +76,7 @@ green = discord.Color.from_rgb(0, 200, 0)
 discord_blue = discord.Color.from_rgb(84, 102, 244)
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
-botlink="https://discordapp.com/users/793183664858071040"
+botlink="https://discordapp.com/users/1102573935658283038"
 boticonurl="https://cdn.discordapp.com/avatars/1102573935658283038/872ee23bdd10cf835335bd98a5981bc2.webp?size=128"
 DiscordWebSocket.identify = identify
 headers = {"Authorization": f"Bot {os.getenv('discord_token')}"}
@@ -137,27 +137,8 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
     else:
         await interaction.response.send_message("rock! :rock:", ephemeral=True)
 
-#send modal
-@client.tree.context_menu(name="Signaler")
-async def report(interaction: discord.Interaction, message: discord.Message):
-    await interaction.response.send_modal(test2())
-
-#report system
-class test2(discord.ui.Modal, title=f"signalement"):
-    reason = discord.ui.TextInput(label='raison', style=discord.TextStyle.paragraph, max_length=200)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f"ton signalement a bien été effectué {interaction.user.display_name} !", ephemeral=True)
-        channel=client.get_channel(1130945538406240405)
-        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\r\n Membre signalé : {discord.Member}\r\n Raison : {self.reason}\r\n Preuve : {interaction.message}```", color = red, timestamp=datetime.datetime.now())
-        emb.set_author(name="BreadBot", url=f"{botlink}", icon_url=f"{boticonurl}")
-        emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
-        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
-#send embed to mod chat
-        await channel.send(embed=emb) #type: ignore
-
 @client.tree.context_menu(name="Profil", guild=guild_id1)
-async def badges(interaction: discord.Interaction, user: discord.Member):
+async def profil(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
     badges_class = str(user.public_flags.all()).replace('[<', '').replace("UserFlags.","").replace('>]', '').replace('_', ' ').replace(':', '').replace(">","").replace("<","").title()
 
@@ -166,16 +147,16 @@ async def badges(interaction: discord.Interaction, user: discord.Member):
     
     # Output
     emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
-    emb.set_thumbnail(url=user.display_avatar,)
-    await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url))
+    emb.set_thumbnail(url=user.display_avatar)
+    await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
 class SimpleView(discord.ui.View):
-    def __init__(self, url):
+    def __init__(self, user, url):
         super().__init__()
         
         # Link buttons cannot be made with the decorator
         # Therefore we have to manually create one.
         # We add the quoted url to the button, and add the button to the view.
-        self.add_item(discord.ui.Button(label='Clique ici', url=url))
+        self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
 
         return
 #sanctions system
@@ -210,13 +191,50 @@ async def sync(interaction: discord.Interaction):
     await client.tree.sync()
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
 
-@client.tree.command(name="test", description="test", guild=guild_id1)
-@app_commands.default_permissions(manage_guild=True)
-async def test(interaction: discord.Interaction):
-    req = requests.get(f"https://discord.com/api/v9/users/{interaction.user.id}", headers=headers)
-    await interaction.response.send_message(req.json(), ephemeral=True)
-#auto events
+#report system
 
+#def modal
+class ReportModal(discord.ui.Modal, title="signalement"):
+    def __init__(self, msg):
+        self.msg = msg
+        super().__init__()
+    textinput = discord.ui.TextInput(label="raison du report",min_length=1, placeholder=f"pourquoi veux-tu le signaler ?")
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        textinput = self.textinput
+        chat = await client.fetch_channel(int(1130945538406240405))
+        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = red, timestamp=datetime.datetime.now())
+        emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
+        emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
+        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore
+        #send embed to mod chat
+        await chat.send(embed=emb) # type: ignore
+        await interaction.response.send_message(content=f"ton signalement a bien été envoyé {interaction.user.display_name}", ephemeral=True)
+
+@client.tree.context_menu(name="Report", guild=guild_id1)
+async def report(interaction: discord.Interaction, message: discord.Message):
+    msg = message
+    await interaction.response.send_modal(ReportModal(msg))
+
+class say(discord.ui.Modal, title="contenu du reply"):
+    def __init__(self, msg):
+        self.msg = msg
+        super().__init__()
+    textinput = discord.ui.TextInput(label="texte",min_length=1)
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        await self.msg.reply(self.textinput.value)
+        await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
+
+@client.tree.context_menu(name="Say", guild=guild_id1)
+@app_commands.default_permissions(manage_guild=True)
+async def pins(interaction: discord.Interaction, message: discord.Message):
+    msg = message
+    await interaction.response.send_modal(say(msg))
+
+
+#auto events
 @client.event
 async def on_member_remove(member: discord.Member):
     channel=client.get_channel(1130945537907114139)
@@ -224,7 +242,6 @@ async def on_member_remove(member: discord.Member):
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
     emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)       
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
-
 
 @client.event 
 async def on_member_join(member: discord.Member):
@@ -239,8 +256,15 @@ async def on_message(message: discord.Message):
     if message.author == client.user:
         return
     if message.channel.id == 1134102319580069898:
-        qotd = await message.create_thread(name="QOTD")
-        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.name}")
+        qotd = await message.create_thread(name=f"QOTD de {message.author.display_name}")
+        botmsg = await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.mention}")
+        await botmsg.pin()
+    if message.channel.id == 1130945537907114141:
+        announcements = await message.create_thread(name=f"Annonce de {message.author.display_name}")
+        botmsg = await announcements.send(f"Thread créé automatiquement pour l'annonce de {message.author.mention}")
+        await message.publish()
+        await botmsg.pin()
+
     if not message.author.id == 911467405115535411:
         word1 = ["quoi", "QUOI", "Quoi", "quoi ?", "QUOI ?", "Quoi ?", "quoi?", "QUOI?", "Quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
@@ -254,16 +278,14 @@ async def on_message(message: discord.Message):
         word2 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
         for i in range(len(word2)):    #Check pour chaque combinaison
             if message.content.startswith(f"t'as les {word2[i]}"):  #Verifie si la combinaison est dans le message
-                await message.reply("https://didnt-a.sk/")
+                rand = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1120352052871176292/1135884018185928754/Oh_no_cringe_but_in_french.mp4)",]
+                await message.reply(rand[random.randint(1, 3)])
                 break
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
             await message.reply(content=f"[résolution du lien :]({vxTiktokResolver})", mention_author=False)
-
-
-
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
@@ -321,6 +343,6 @@ async def changepresence():
 async def on_ready():
     print("="*10 + " Build Infos " + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
-    print(f"Discord info : {discord.version_info.serial}")
+    print(f"Discord info : {discord.version_info.releaselevel}")
     await changepresence.start()
 client.run(DISCORD_TOKEN)  # type: ignore
