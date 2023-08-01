@@ -133,7 +133,7 @@ async def snap(interaction: discord.Interaction):
 
     files = discord.File(fp=filename)
     await interaction.response.send_message(file=files, ephemeral=True)
-    time.sleep(5)
+
 
 @client.tree.command(name="uid_save", description="[FUN][INFO] enregistre ton UID Genshin Impact", guild=guild_id)
 @app_commands.describe(amount="l'UID de ton compte Genshin Impact")
@@ -159,6 +159,9 @@ async def add_score(interaction: discord.Interaction, amount: int):
 async def on_message(msg: discord.Message):
     if msg.author == client.user:
         return
+    if msg.channel.id == 1134102319580069898:
+        await msg.create_thread(name="QOTD")
+    
     word1 = [
         "Salut",
         "Hey",

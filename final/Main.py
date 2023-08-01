@@ -238,6 +238,9 @@ async def on_member_join(member: discord.Member):
 async def on_message(message: discord.Message):
     if message.author == client.user:
         return
+    if message.channel.id == 1134102319580069898:
+        qotd = await message.create_thread(name="QOTD")
+        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.name}")
     if not message.author.id == 911467405115535411:
         word1 = ["quoi", "QUOI", "Quoi", "quoi ?", "QUOI ?", "Quoi ?", "quoi?", "QUOI?", "Quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
