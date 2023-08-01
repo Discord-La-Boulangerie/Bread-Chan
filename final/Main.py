@@ -245,7 +245,7 @@ async def on_member_remove(member: discord.Member):
 
 @client.event 
 async def on_member_join(member: discord.Member):
-    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.name}! <:Chad:1115629188049813534> :french_bread:\npour commencer, va dans https://discord.com/channels/1130945537181499542/1130945537907114140 et effectue la commande </captcha:1131468501870182436>", color = green, timestamp=datetime.datetime.now())
+    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = green, timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
     emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)            
     channel = client.get_channel(1130945537907114139)
