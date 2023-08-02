@@ -8,5 +8,5 @@ nyaa~
 
 
 
-## mes librairies :
+## mes librairies et imports :
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/discord.py?label=discord.py) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/python-dotenv?label=python-dotenv) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Pillow?label=Pillow)
