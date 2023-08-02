@@ -98,8 +98,8 @@ class staff(discord.ui.Modal, title="Candidature"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"ta candidature a bien été enregistrée {interaction.user.mention} !", ephemeral=True)
-        channel=client.get_channel(1115615150251192420)
-        emb=discord.Embed(title="Candidature", description=f"```{interaction.user.display_name} vient de postuler :\r\n rôle sujet au recrutement : {self.role}\r\n Raison : {self.reason}```", color = discord_blue, timestamp=datetime.datetime.now())
+        channel=client.get_channel(1130945538406240399)
+        emb=discord.Embed(title="Candidature", description=f"```{interaction.user.display_name} vient de postuler :\n\n rôle sujet au recrutement : {self.role}\n\n Raison : {self.reason}```", color = discord_blue, timestamp=datetime.datetime.now())
         emb.set_author(name="BreadBot", url=f"{botlink}", icon_url=f"{boticonurl}") # type: ignore
         emb.set_thumbnail(url=f"{interaction.user.avatar}")        
         emb.set_footer(text=f"{interaction.user.display_name}, sur {interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
