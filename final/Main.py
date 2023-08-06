@@ -58,10 +58,7 @@ DISCORD_TOKEN = os.getenv("discord_token")
 BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
-blagues = BlaguesAPI(BLAGUES_TOKEN)
-bsclient = brawlstats.Client(BS_TOKEN)
 enkaclient = EnkaNetworkAPI(lang="fr", cache=True)
-fnapi = fortnite_api.FortniteAPI(FN_TOKEN)
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -103,7 +100,6 @@ async def pingpong(interaction: discord.Interaction):
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
     emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
-    blague = await blagues.random(disallow=[BlagueType.LIMIT, BlagueType.BEAUF])
 #staff app system
 class staff(discord.ui.Modal, title="Candidature"):
     role = discord.ui.TextInput(label='rôle', style=discord.TextStyle.paragraph, max_length=200, placeholder="décrit nous quel rôle tu souhaite avoir", required = True)
@@ -153,13 +149,10 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
 @client.tree.context_menu(name="Profil", guild=guild_id1)
 async def profil(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
-    badges_class = str(user.public_flags.all()).replace('[<', '').replace("UserFlags.","").replace('>]', '').replace('_', ' ').replace(':', '').replace(">","").replace("<","").title()
+    badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
 
-    # Remove digits from string
-    badges_class = ''.join([i for i in badges_class if not i.isdigit()])
-    
     # Output
-    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
+    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n{badges_class}", color=user.color)
     emb.set_thumbnail(url=user.display_avatar)
     await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
 class SimpleView(discord.ui.View):
@@ -205,26 +198,25 @@ async def sync(interaction: discord.Interaction):
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
 
 
-@client.tree.command(name="game_info", description="test", guild=guild_id1)
+@client.tree.command(name="game_info", description="[BETA] permet d'obtenir des infos sur un compte de jeu", guild=guild_id1)
 @app_commands.choices(choix=[
     app_commands.Choice(name="Genshin", value="gi"),
     app_commands.Choice(name="Fortnite", value="fn"),
     app_commands.Choice(name="Brawl Stars", value="bs"),
     ])
-@app_commands.default_permissions(manage_guild=True)
+@app_commands.describe(choix="Choisissez le jeu (pour le moment seul Genshin Impact fonctionne, à moitié)")
+@app_commands.describe(uid="le pseudo ou identifiant de l'utilisateur")
 async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[str], uid: str):
     if choix.value == "bs":
-        player = bsclient.get_profile(uid)
-        await interaction.response.send_message(player.get_club)
+        await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
     if choix.value == "fn":
-        fnname = fnapi.stats.fetch_by_id(uid)
-        await fnname.stats
+        await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
     if choix.value == "gi":
         data = await enkaclient.fetch_user(uid)
     try: 
         data = await enkaclient.fetch_user(uid)
     except EnkaPlayerNotFound as vr:
-        emb=discord.Embed(title=f"Erreur", url=f"https://enka.network/u/", description=f"=== UID introuvable ===\n\n{vr}", color = red, timestamp=datetime.datetime.now())
+        emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = red, timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
         emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
@@ -235,8 +227,6 @@ async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[
         emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
         await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
-        for char in data.characters:
-            return
 
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
