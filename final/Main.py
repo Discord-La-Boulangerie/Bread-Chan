@@ -1,11 +1,18 @@
 #imports
-import discord, os, datetime, random, requests, pprint
+import discord, os, datetime, random, requests, pprint, json
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from typing import Optional
 import sys
 from discord.gateway import DiscordWebSocket, _log
+from blagues_api import BlaguesAPI, BlagueType, Blague, CountJoke, main
+import brawlstats
+from brawlstats import Ranking, Player, Members, Client, Club, Constants, Brawlers, BattleLog, NotFoundError, models, core
+from enkanetwork import EnkaNetworkAPI, EnkaPlayerNotFound
+import fortnite_api
+from fortnite_api import StatsImageType, AccountType, BrBannerImage, BrPlayerStats, Playlist
+
 
 #paramètres
 
@@ -48,6 +55,13 @@ async def identify(self):
     _log.info('Shard ID %s has sent the IDENTIFY payload.', self.shard_id)
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
+BLAGUES_TOKEN = os.getenv("blagues_api_token")
+BS_TOKEN = os.getenv("bs_api_token")
+FN_TOKEN = os.getenv("fn_token")
+blagues = BlaguesAPI(BLAGUES_TOKEN)
+bsclient = brawlstats.Client(BS_TOKEN)
+enkaclient = EnkaNetworkAPI(lang="fr", cache=True)
+fnapi = fortnite_api.FortniteAPI(FN_TOKEN)
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -79,7 +93,6 @@ guild_id1 = discord.Object(id=guild_id)
 botlink="https://discordapp.com/users/1102573935658283038"
 boticonurl="https://cdn.discordapp.com/avatars/1102573935658283038/872ee23bdd10cf835335bd98a5981bc2.webp?size=128"
 DiscordWebSocket.identify = identify
-headers = {"Authorization": f"Bot {os.getenv('discord_token')}"}
 # Set up the OpenAI API client
 
 ##commands
@@ -90,7 +103,7 @@ async def pingpong(interaction: discord.Interaction):
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
     emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
-
+    blague = await blagues.random(disallow=[BlagueType.LIMIT, BlagueType.BEAUF])
 #staff app system
 class staff(discord.ui.Modal, title="Candidature"):
     role = discord.ui.TextInput(label='rôle', style=discord.TextStyle.paragraph, max_length=200, placeholder="décrit nous quel rôle tu souhaite avoir", required = True)
@@ -191,6 +204,69 @@ async def sync(interaction: discord.Interaction):
     await client.tree.sync()
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
 
+
+@client.tree.command(name="game_info", description="test", guild=guild_id1)
+@app_commands.choices(choix=[
+    app_commands.Choice(name="Genshin", value="gi"),
+    app_commands.Choice(name="Fortnite", value="fn"),
+    app_commands.Choice(name="Brawl Stars", value="bs"),
+    ])
+@app_commands.default_permissions(manage_guild=True)
+async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[str], uid: str):
+    if choix.value == "bs":
+        player = bsclient.get_profile(uid)
+        await interaction.response.send_message(player.get_club)
+    if choix.value == "fn":
+        fnname = fnapi.stats.fetch_by_id(uid)
+        await fnname.stats
+    if choix.value == "gi":
+        data = await enkaclient.fetch_user(uid)
+    try: 
+        data = await enkaclient.fetch_user(uid)
+    except EnkaPlayerNotFound as vr:
+        emb=discord.Embed(title=f"Erreur", url=f"https://enka.network/u/", description=f"=== UID introuvable ===\n\n{vr}", color = red, timestamp=datetime.datetime.now())
+        emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
+        emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
+        await interaction.response.send_message(embed=emb, ephemeral=True)
+    else:
+        emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = blue, timestamp=datetime.datetime.now())
+        emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
+        emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
+        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
+        await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
+        for char in data.characters:
+            return
+
+class Dropdown(discord.ui.Select):
+    def __init__(self, data):
+        self.data = data
+        # Set the options that will be presented inside the dropdown
+        options=[]
+        for char in self.data.characters:
+            options.append(discord.SelectOption(label=f"{char.name}", description=f"le build de {char.name}", value=char.id)) # add dropdown option for each character in data.character
+            super().__init__(placeholder="Sélectionne le build que tu souhaite regarder :", min_values=1, max_values=1, options=options)
+
+        # The placeholder is what will be shown when no option is chosen
+        # The min and max values indicate we can only pick one of the three options
+        # The options parameter defines the dropdown options. We defined this above
+    async def callback(self, interaction: discord.Interaction):
+
+        # Use the interaction object to send a response message containing
+        # the user's favourite colour or choice. The self object refers to the
+        # Select object, and the values attribute gets a list of the user's
+        # selected options. We only want the first one.
+            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0]}", description=f"Voici les informations du personnage:\n\n{self}", color = green, timestamp=datetime.datetime.now())
+            emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
+            emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
+            await interaction.response.send_message(f"Voici le build de {self.values[0]}:", ephemeral=True, embed=emb)
+
+class DropdownView(discord.ui.View):
+    def __init__(self, data):
+        super().__init__()
+        self.data=data
+        # Adds the dropdown to our view object.
+        self.add_item(Dropdown(data))
 #report system
 
 #def modal
@@ -233,7 +309,6 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
     msg = message
     await interaction.response.send_modal(say(msg))
 
-
 #auto events
 @client.event
 async def on_member_remove(member: discord.Member):
@@ -257,13 +332,24 @@ async def on_message(message: discord.Message):
         return
     if message.channel.id == 1134102319580069898:
         qotd = await message.create_thread(name=f"QOTD de {message.author.display_name}")
-        botmsg = await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.mention}")
-        await botmsg.pin()
+        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.mention}")
+    
     if message.channel.id == 1130945537907114141:
         announcements = await message.create_thread(name=f"Annonce de {message.author.display_name}")
         botmsg = await announcements.send(f"Thread créé automatiquement pour l'annonce de {message.author.mention}")
         await message.publish()
         await botmsg.pin()
+    if not message.author.id == 911467405115535411:
+        if message.channel.id == 1132379187227930664:
+            if not message.attachments:
+                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://fr.pornhub.com/"]
+                for i in range(len(word)):
+                    if word[i] in message.content:
+                        return
+                    else:    
+                        await message.delete()
+                        await message.author.send(f"tu n'as pas la permission d'envoyer des messages textuels dans {message.channel.mention} 🙄") #type: ignore
+# en gros, si y a un message, si le message n'a pas été envoyé par moi, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
 
     if not message.author.id == 911467405115535411:
         word1 = ["quoi", "QUOI", "Quoi", "quoi ?", "QUOI ?", "Quoi ?", "quoi?", "QUOI?", "Quoi?"]
@@ -296,7 +382,7 @@ async def changepresence():
             "pas ma mère sur Pornhub !",
             "à quoi jouent les membres du serveur",
             "Chainsaw Man sur Crunchyroll",
-            "un porno gay avec DaftBot et Dyno",
+            "un porno gay avec DraftBot et Dyno",
             "mon 69ème statut.",
             "maman, je passe à la télé !",
             "Wishrito, traverse la rue et tu trouveras du travail",
