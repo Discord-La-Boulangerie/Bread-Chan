@@ -1,16 +1,13 @@
 #imports
-import discord, os, datetime, random, requests, pprint, json
+import discord, os, datetime, random, requests, pprint, json, time, sys, brawlstats, fortnite_api
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from typing import Optional
-import sys
 from discord.gateway import DiscordWebSocket, _log
 from blagues_api import BlaguesAPI, BlagueType, Blague, CountJoke, main
-import brawlstats
 from brawlstats import Ranking, Player, Members, Client, Club, Constants, Brawlers, BattleLog, NotFoundError, models, core
 from enkanetwork import EnkaNetworkAPI, EnkaPlayerNotFound
-import fortnite_api
 from fortnite_api import StatsImageType, AccountType, BrBannerImage, BrPlayerStats, Playlist
 
 
@@ -81,10 +78,6 @@ class MyClient(discord.Client):
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
 bot = commands.Bot(intents=intents, command_prefix=commands.when_mentioned_or("K!"))
-blue = discord.Color.from_rgb(0, 0, 200)
-red = discord.Color.from_rgb(200, 0, 0)
-green = discord.Color.from_rgb(0, 200, 0)
-discord_blue = discord.Color.from_rgb(84, 102, 244)
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
 botlink="https://discordapp.com/users/1102573935658283038"
@@ -96,7 +89,7 @@ DiscordWebSocket.identify = identify
 #ping
 @client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
-    emb=discord.Embed( description="Pong ! 🏓 <:Chad:1115629188049813534>", color=discord_blue,timestamp=datetime.datetime.now())
+    emb=discord.Embed( description="Pong ! 🏓 <:Chad:1115629188049813534>", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
     emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
@@ -108,7 +101,7 @@ class staff(discord.ui.Modal, title="Candidature"):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"ta candidature a bien été enregistrée {interaction.user.mention} !", ephemeral=True)
         channel=client.get_channel(1130945538406240399)
-        emb=discord.Embed(title="Candidature", description=f"```{interaction.user.display_name} vient de postuler :\n\n rôle sujet au recrutement : {self.role}\n\n Raison : {self.reason}```", color = discord_blue, timestamp=datetime.datetime.now())
+        emb=discord.Embed(title="Candidature", description=f"```{interaction.user.display_name} vient de postuler :\n\n rôle sujet au recrutement : {self.role}\n\n Raison : {self.reason}```", color = discord.Colour.blurple(), timestamp=datetime.datetime.now())
         emb.set_author(name="BreadBot", url=f"{botlink}", icon_url=f"{boticonurl}") # type: ignore
         emb.set_thumbnail(url=f"{interaction.user.avatar}")        
         emb.set_footer(text=f"{interaction.user.display_name}, sur {interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
@@ -124,7 +117,7 @@ async def staff_app(interaction: discord.Interaction):
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
     channel=client.get_channel(1130945537907114137)
-    emb=discord.Embed(title="Règlement de la Boulangerie", description="# __I__. Respecter les règles de la plate-forme !\nAvant de respecter le règlement du serveur, nous vous invitons également à respecter les règles de discord :\n- [Conditions d'utilisation de Discord](https://discord.com/terms)\n- [Charte d’utilisation de la communauté Discord](https://discord.com/guidelines)\n# __II__. Langue sur le serveur :\nLe serveur et ses discussions sont uniquement en Français.\n# __III__. Soyez respectueux et ayez du bon sens !\nAyez une bonne impression au sein de la communauté ! Tous types de contenus violents, racistes et NSFW sont interdits sur ce serveur. Respectez vous peu importe vos affinités lorsque vous parlez avec le reste de la communauté. Nous ne pouvons pas tout énumérer mais n'essayez pas de contourner les règles d'une quelconque manière.\n# __IV__. Les Interdictions :\nLa publicité de n'importe quel projet sur le serveur comme dans les messages privés des autres membres est interdite. Le spam, le flood ou tout spam de mentions inutiles voir abusives vous sera sanctionné. Les comportements toxiques (troll, insultes, etc...) ainsi que les provocations n'ont rien à faire sur ce serveur. La divulgation d'informations sans consentement vous sera sanctionné.\n# __V__. Le Staff :\nL'équipe de modération vous remercierai d'avoir un pseudonyme sans caractère spéciaux ainsi qu'un profil correct et approprié. Ces règles ne sont pas négligeables et obligatoires. L'équipe de modération ainsi que l'administration aura toujours le dernier mot. En cas d'abus de l'un de nos modérateurs, merci de nous prévenir !", color = discord_blue)
+    emb=discord.Embed(title="Règlement de la Boulangerie", description="# __I__. Respecter les règles de la plate-forme !\nAvant de respecter le règlement du serveur, nous vous invitons également à respecter les règles de discord :\n- [Conditions d'utilisation de Discord](https://discord.com/terms)\n- [Charte d’utilisation de la communauté Discord](https://discord.com/guidelines)\n# __II__. Langue sur le serveur :\nLe serveur et ses discussions sont uniquement en Français.\n# __III__. Soyez respectueux et ayez du bon sens !\nAyez une bonne impression au sein de la communauté ! Tous types de contenus violents, racistes et NSFW sont interdits sur ce serveur. Respectez vous peu importe vos affinités lorsque vous parlez avec le reste de la communauté. Nous ne pouvons pas tout énumérer mais n'essayez pas de contourner les règles d'une quelconque manière.\n# __IV__. Les Interdictions :\nLa publicité de n'importe quel projet sur le serveur comme dans les messages privés des autres membres est interdite. Le spam, le flood ou tout spam de mentions inutiles voir abusives vous sera sanctionné. Les comportements toxiques (troll, insultes, etc...) ainsi que les provocations n'ont rien à faire sur ce serveur. La divulgation d'informations sans consentement vous sera sanctionné.\n# __V__. Le Staff :\nL'équipe de modération vous remercierai d'avoir un pseudonyme sans caractère spéciaux ainsi qu'un profil correct et approprié. Ces règles ne sont pas négligeables et obligatoires. L'équipe de modération ainsi que l'administration aura toujours le dernier mot. En cas d'abus de l'un de nos modérateurs, merci de nous prévenir !", color = discord.Color.blue())
     emb.set_author(name="Wishrito", url="https://discordapp.com/users/911467405115535411", icon_url=f"{interaction.user.avatar}") # type: ignore
     emb.set_thumbnail(url="https://cdn.discordapp.com/icons/1115588576340606978/a_d2b27f21b84bc1b5c000b05d408a76ef.gif?size=96")        
     #send embed to rules chat
@@ -147,6 +140,7 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
         await interaction.response.send_message("rock! :rock:", ephemeral=True)
 
 @client.tree.context_menu(name="Profil", guild=guild_id1)
+@app_commands.rename(user="Membre")
 async def profil(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
     badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
@@ -164,7 +158,6 @@ class SimpleView(discord.ui.View):
         # We add the quoted url to the button, and add the button to the view.
         self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
 
-        return
 #sanctions system
 @client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.rename(member="membre")
@@ -173,22 +166,73 @@ class SimpleView(discord.ui.View):
 @app_commands.describe(reason="la raison du ban")
 @app_commands.default_permissions(ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member, reason:Optional[str] = None):
-    await member.kick(reason=reason)
-    await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
-    channel = await client.fetch_channel(1130945537907114139)
-    await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") # type: ignore
+    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
+        if interaction.user.top_role <= member.top_role: #type: ignore
+            await interaction.response.send_message(f"tu n'as pas la permission de ban {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", ephemeral=True, color=discord.Color.red()) #type: ignore
+        else:
+            await member.ban(reason=reason)
+            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
+            channel = await client.fetch_channel(1130945537907114139)
+            await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") #type: ignore
+    else:
+        await member.ban(reason=reason)
+        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
+        channel = await client.fetch_channel(1130945537907114139)
+        await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") #type: ignore
 
-@client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié")
+#sanctions system
+@client.tree.command(name ="mute", description = "[MODERATION] mute un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@app_commands.rename(member="membre")
+@app_commands.describe(member="l'utilisateur à mute")
+@app_commands.rename(reason="raison")
+@app_commands.describe(reason="la raison du mute")
+@app_commands.rename(duration="temps")
+@app_commands.describe(duration="Le temps que l'utilisateur doit être mute")
+@app_commands.describe(file="le fichier contenant la preuve de la raison")
+@app_commands.rename(file="fichier")
+@app_commands.default_permissions(moderate_members=True)
+async def mute(interaction: discord.Interaction, member: discord.Member, duration: str, reason:Optional[str], file: Optional[discord.Attachment] = None):
+    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
+        if interaction.user.top_role.position <= member.top_role.position: #type: ignore
+            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
+            await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
+        else:
+            await member.timeout(datetime.timedelta(seconds=float(duration)), reason=reason)
+            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
+            channel = await client.fetch_channel(1131864743502696588)
+            emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
+            emb.set_field_at(index=1, name="", value=file)
+            await channel.send(embed=emb) #type: ignore
+
+    else:
+        await member.timeout(datetime.timedelta(seconds=float(duration)))
+        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
+        channel = await client.fetch_channel(1131864743502696588)
+        emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
+        emb.set_image(url=file)
+        await channel.send(embed=emb) #type: ignore
+
+@client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié", guild=guild_id1)
 @app_commands.rename(member="membre")
 @app_commands.describe(member="l'utilisateur à kick")
 @app_commands.rename(reason="raison")
 @app_commands.describe(reason="la raison du kick")
 @app_commands.default_permissions(kick_members=True)
-async def kick(interaction: discord.Interaction, member: discord.Member, reason:Optional[str] = None):
-    await member.kick(reason=reason)
-    await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
-    channel = await client.fetch_channel(1130945537907114139)
-    await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: Optional[str], file: Optional[discord.Attachment] = None):
+    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
+        if interaction.user.top_role <= member.top_role: #type: ignore
+            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
+            await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
+        else:
+            await member.kick(reason=reason)
+            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
+            channel = await client.fetch_channel(1130945537907114139)
+            await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
+    else:
+        await member.kick(reason=reason)
+        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
+        channel = await client.fetch_channel(1130945537907114139)
+        await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
 
 @client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
 @app_commands.default_permissions(manage_guild=True)
@@ -196,7 +240,6 @@ async def sync(interaction: discord.Interaction):
     await client.tree.sync(guild=guild_id1)
     await client.tree.sync()
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
-
 
 @client.tree.command(name="game_info", description="[BETA] permet d'obtenir des infos sur un compte de jeu", guild=guild_id1)
 @app_commands.choices(choix=[
@@ -216,13 +259,13 @@ async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[
     try: 
         data = await enkaclient.fetch_user(uid)
     except EnkaPlayerNotFound as vr:
-        emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = red, timestamp=datetime.datetime.now())
+        emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
         emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
         await interaction.response.send_message(embed=emb, ephemeral=True)
     else:
-        emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = blue, timestamp=datetime.datetime.now())
+        emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
         emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
@@ -234,9 +277,10 @@ class Dropdown(discord.ui.Select):
         # Set the options that will be presented inside the dropdown
         options=[]
         for char in self.data.characters:
+            self.char = char.name
             options.append(discord.SelectOption(label=f"{char.name}", description=f"le build de {char.name}", value=char.id)) # add dropdown option for each character in data.character
             super().__init__(placeholder="Sélectionne le build que tu souhaite regarder :", min_values=1, max_values=1, options=options)
-
+            
         # The placeholder is what will be shown when no option is chosen
         # The min and max values indicate we can only pick one of the three options
         # The options parameter defines the dropdown options. We defined this above
@@ -246,17 +290,20 @@ class Dropdown(discord.ui.Select):
         # the user's favourite colour or choice. The self object refers to the
         # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0]}", description=f"Voici les informations du personnage:\n\n{self}", color = green, timestamp=datetime.datetime.now())
+            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.char.name}", description=f"Voici les informations du personnage:\n\n{self.char.name}", color = discord.Color.green(), timestamp=datetime.datetime.now())
             emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
             emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
             await interaction.response.send_message(f"Voici le build de {self.values[0]}:", ephemeral=True, embed=emb)
 
 class DropdownView(discord.ui.View):
-    def __init__(self, data):
-        super().__init__()
+    def __init__(self, data, timeout=100):
+        super().__init__(timeout=timeout)
         self.data=data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
+        
+        async def on_timeout(self):
+            DropdownView.clear_items
 #report system
 
 #def modal
@@ -269,7 +316,7 @@ class ReportModal(discord.ui.Modal, title="signalement"):
     async def on_submit(self, interaction: discord.Interaction):
         textinput = self.textinput
         chat = await client.fetch_channel(int(1130945538406240405))
-        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = red, timestamp=datetime.datetime.now())
+        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = discord.Color.green(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=f"{boticonurl}")
         emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore
@@ -303,14 +350,14 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
 @client.event
 async def on_member_remove(member: discord.Member):
     channel=client.get_channel(1130945537907114139)
-    emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = red, timestamp=datetime.datetime.now())
+    emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
     emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)       
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
 
 @client.event 
 async def on_member_join(member: discord.Member):
-    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = green, timestamp=datetime.datetime.now())
+    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
     emb.set_author(name="BreadBot", icon_url=f"{boticonurl}", url=f"{botlink}")
     emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)            
     channel = client.get_channel(1130945537907114139)
@@ -332,7 +379,7 @@ async def on_message(message: discord.Message):
     if not message.author.id == 911467405115535411:
         if message.channel.id == 1132379187227930664:
             if not message.attachments:
-                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://fr.pornhub.com/"]
+                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
                 for i in range(len(word)):
                     if word[i] in message.content:
                         return
@@ -349,7 +396,7 @@ async def on_message(message: discord.Message):
                 break
         if message.content.startswith("<@1102573935658283038>"):
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
-        if message.content.startswith("<:HFW1:1133660402081865788> <:HFW2:1133660404665548901>"):
+        if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
         word2 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
         for i in range(len(word2)):    #Check pour chaque combinaison
