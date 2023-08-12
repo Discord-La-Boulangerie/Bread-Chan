@@ -2,3 +2,4 @@
 .env
 db
 dbtest.py
+Spotipy tests.py

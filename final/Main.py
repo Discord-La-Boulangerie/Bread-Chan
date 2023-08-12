@@ -1,5 +1,5 @@
 #imports
-import discord, os, datetime, random, requests, pprint, json, time, sys, brawlstats, fortnite_api
+import discord, os, datetime, random, requests, pprint, json, time, sys, brawlstats, fortnite_api, urllib
 from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
@@ -9,8 +9,6 @@ from blagues_api import BlaguesAPI, BlagueType, Blague, CountJoke, main
 from brawlstats import Ranking, Player, Members, Client, Club, Constants, Brawlers, BattleLog, NotFoundError, models, core
 from enkanetwork import EnkaNetworkAPI, EnkaPlayerNotFound
 from fortnite_api import StatsImageType, AccountType, BrBannerImage, BrPlayerStats, Playlist
-
-
 #paramètres
 
 #mobile status
@@ -77,13 +75,11 @@ class MyClient(discord.Client):
         await self.tree.sync()
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
-bot = commands.Bot(intents=intents, command_prefix=commands.when_mentioned_or("K!"))
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
 botlink="https://discordapp.com/users/1102573935658283038"
 boticonurl="https://cdn.discordapp.com/avatars/1102573935658283038/872ee23bdd10cf835335bd98a5981bc2.webp?size=128"
 DiscordWebSocket.identify = identify
-# Set up the OpenAI API client
 
 ##commands
 #ping
@@ -270,14 +266,13 @@ async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[
         emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) #type: ignore
         await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
-
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
         self.data = data
         # Set the options that will be presented inside the dropdown
         options=[]
         for char in self.data.characters:
-            self.char = char.name
+            self.char = char
             options.append(discord.SelectOption(label=f"{char.name}", description=f"le build de {char.name}", value=char.id)) # add dropdown option for each character in data.character
             super().__init__(placeholder="Sélectionne le build que tu souhaite regarder :", min_values=1, max_values=1, options=options)
             
@@ -290,20 +285,17 @@ class Dropdown(discord.ui.Select):
         # the user's favourite colour or choice. The self object refers to the
         # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.char.name}", description=f"Voici les informations du personnage:\n\n{self.char.name}", color = discord.Color.green(), timestamp=datetime.datetime.now())
+            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.char.name}", description=f"Voici les informations du personnage:\n\ncrit rate: {self.char.stats.FIGHT_PROP_CRITICAL.to_percentage_symbol()}", color = discord.Color.green(), timestamp=datetime.datetime.now())
             emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
             emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
             await interaction.response.send_message(f"Voici le build de {self.values[0]}:", ephemeral=True, embed=emb)
 
 class DropdownView(discord.ui.View):
-    def __init__(self, data, timeout=100):
-        super().__init__(timeout=timeout)
-        self.data=data
+    def __init__(self, data):
+        super().__init__(timeout=float(120))
+        self.data = data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
-        
-        async def on_timeout(self):
-            DropdownView.clear_items
 #report system
 
 #def modal
@@ -398,16 +390,16 @@ async def on_message(message: discord.Message):
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
-        word2 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
-        for i in range(len(word2)):    #Check pour chaque combinaison
-            if message.content.startswith(f"t'as les {word2[i]}"):  #Verifie si la combinaison est dans le message
-                rand = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1120352052871176292/1135884018185928754/Oh_no_cringe_but_in_french.mp4)",]
-                await message.reply(rand[random.randint(1, 3)])
+        randcramptes1 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
+        for i in range(len(randcramptes1)):    #Check pour chaque combinaison
+            randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1120352052871176292/1135884018185928754/Oh_no_cringe_but_in_french.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
+            if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
+                await message.reply(random.choice(randcramptes2))
                 break
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
-            vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
+            vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
             await message.reply(content=f"[résolution du lien :]({vxTiktokResolver})", mention_author=False)
 
 #auto tasks
