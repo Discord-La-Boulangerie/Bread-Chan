@@ -87,18 +87,35 @@ async def pingpong(interaction: discord.Interaction):
     emb.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
-@client.tree.context_menu(name="profil", guild=guild_id)
-async def badges(interaction: discord.Interaction, user: discord.Member):
+@client.tree.context_menu(name="Profil", guild=guild_id)
+@app_commands.rename(user="Membre")
+async def profil(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
-    badges_class = str(user.public_flags.all()).replace('[<', '').replace("UserFlags.","").replace('>]', '').replace('_', ' ').replace(':', '').replace(">","").replace("<","").title()
+    badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
 
-    # Remove digits from string
-    badges_class = ''.join([i for i in badges_class if not i.isdigit()])
-    
     # Output
-    emb = discord.Embed(title=f"Profil de {user.display_name}", description=f"Date de création du compte :\n> le {user.created_at.date()} à {user.created_at.hour}h{user.created_at.minute}\nBadges :\n> {badges_class}", color=user.color)
-    emb.set_thumbnail(url=user.display_avatar)
-    await interaction.response.send_message(embed=emb, ephemeral=True)
+
+#NEW
+    emb = discord.Embed(
+    title=f"Profile de {user.display_name}",
+    color=user.color,
+    timestamp= datetime.datetime.now()   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
+    )
+    emb.add_field(name="Date de création du compte :", value=f"le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}")
+    emb.add_field(name="Badges :", value=badges_class)
+
+    emb.set_thumbnail(url= f"{user.display_avatar}")   #Pour ajouter la pp du type
+    emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
+    await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
+class SimpleView(discord.ui.View):
+    def __init__(self, user, url):
+        super().__init__()
+
+        # Link buttons cannot be made with the decorator
+        # Therefore we have to manually create one.
+        # We add the quoted url to the button, and add the button to the view.
+        self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
+
 
 #rps
 @client.tree.command(name="sync", description="[ADMIN] permet de syncroniser le tree")
