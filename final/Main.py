@@ -187,26 +187,34 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
 @app_commands.describe(file="le fichier contenant la preuve de la raison")
 @app_commands.rename(file="fichier")
 @app_commands.default_permissions(moderate_members=True)
-async def mute(interaction: discord.Interaction, member: discord.Member, duration: str, reason:Optional[str], file: Optional[discord.Attachment] = None):
+async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason:Optional[str], seconds: Optional[int] = 0, minutes: Optional[int] = 0, hours: Optional[int] = 0, days: Optional[int] = 0):
     if not interaction.user.id == interaction.guild.owner_id : #type: ignore
-        if interaction.user.top_role.position <= member.top_role.position: #type: ignore
-            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
-            await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
+        if interaction.user.top_role <= member.top_role: #type: ignore
+            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de mute {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
+            await interaction.response.send_message(embed=emb, ephemeral=True)
         else:
-            await member.timeout(datetime.timedelta(seconds=float(duration)), reason=reason)
-            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
-            channel = await client.fetch_channel(1131864743502696588)
-            emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
-            emb.set_field_at(index=1, name="", value=file)
-            await channel.send(embed=emb) #type: ignore
-
+            if reason == None:
+                await member.kick(reason="n'a pas respecté les règles")
+                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été mute", ephemeral=True)
+                channel = await client.fetch_channel(1130945537907114139)
+                await channel.send(content=f"{member.mention} a été mute du serveur par {interaction.user.name}") #type: ignore
+            else:
+                await member.kick(reason=reason)
+                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été mute", ephemeral=True)
+                channel = await client.fetch_channel(1130945537907114139)
+                await channel.send(content=f"{member.mention} a été mute du serveur par {interaction.user.name}") #type: ignore
     else:
-        await member.timeout(datetime.timedelta(seconds=float(duration)))
-        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
-        channel = await client.fetch_channel(1131864743502696588)
-        emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
-        emb.set_image(url=file)
-        await channel.send(embed=emb) #type: ignore
+        if reason == None:
+            await member.timeout(until=duration, reason="n'a pas respecté les règles")
+            await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été mute", ephemeral=True)
+            emb = discord.Embed(title="Sanction", description=f"{member.mention} a été mute du serveur par {interaction.user.name}", timestamp=datetime.datetime.now())
+            channel = await client.fetch_channel(1130945537907114139)
+            await channel.send() #type: ignore
+        else:
+            await member.kick(reason=reason)
+            await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été mute", ephemeral=True)
+            channel = await client.fetch_channel(1130945537907114139)
+            await channel.send(content=f"{member.mention} a été mute du serveur par {interaction.user.name}") #type: ignore
 
 @client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié", guild=guild_id1)
 @app_commands.rename(member="membre")
@@ -218,15 +226,21 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     if not interaction.user.id == interaction.guild.owner_id : #type: ignore
         if interaction.user.top_role <= member.top_role: #type: ignore
             emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
-            await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
+            await interaction.response.send_message(embed=emb, ephemeral=True)
         else:
-            await member.kick(reason=reason)
-            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
-            channel = await client.fetch_channel(1130945537907114139)
-            await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
+            if reason == None:
+                await member.kick(reason="n'a pas respecté les règles")
+                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
+                channel = await client.fetch_channel(1130945537907114139)
+                await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
+            else:
+                await member.kick(reason=reason)
+                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
+                channel = await client.fetch_channel(1130945537907114139)
+                await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
     else:
         await member.kick(reason=reason)
-        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
+        await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
         channel = await client.fetch_channel(1130945537907114139)
         await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
 
