@@ -10,7 +10,7 @@ from typing import Optional
 #Import de discord et modules discord
 import discord 
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 
 #Import des API
@@ -57,6 +57,7 @@ async def identify(self):
     await self.call_hooks('before_identify', self.shard_id, initial=self._initial_identify)
     await self.send_as_json(payload)
     _log.info('Shard ID %s has sent the IDENTIFY payload.', self.shard_id)
+
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
 BLAGUES_TOKEN = os.getenv("blagues_api_token")
@@ -93,10 +94,11 @@ DiscordWebSocket.identify = identify
 #ping
 @client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
-    emb=discord.Embed( description="Pong ! 🏓 <:Chad:1115629188049813534>", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
+    emb=discord.Embed(description="Pong ! 🏓", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
     emb.set_author(name=client.user.display_name, icon_url=client.user.avatar, url=f"{botlink}") # type: ignore
     emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
     await interaction.response.send_message(embed=emb, ephemeral=True)
+
 #staff app system
 class staff(discord.ui.Modal, title="Candidature"):
     role = discord.ui.TextInput(label='rôle', style=discord.TextStyle.paragraph, max_length=200, placeholder="décrit nous quel rôle tu souhaite avoir", required = True)
@@ -109,7 +111,7 @@ class staff(discord.ui.Modal, title="Candidature"):
         emb.add_field(name="Rôle sujet au recrutement :",value=self.role, inline=True)
         emb.add_field(name="Raison",value=self.reason, inline=True)
         emb.set_thumbnail(url=f"{interaction.user.avatar}")        
-        emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
+        emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
 #send embed to mod chat
         await channel.send(embed=emb)
 
@@ -167,7 +169,7 @@ async def profil(interaction: discord.Interaction, user: discord.Member):
 class SimpleView(discord.ui.View):
     def __init__(self, user, url):
         super().__init__()
-        
+
         # Link buttons cannot be made with the decorator
         # Therefore we have to manually create one.
         # We add the quoted url to the button, and add the button to the view.
