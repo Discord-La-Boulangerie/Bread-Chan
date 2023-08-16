@@ -3,6 +3,7 @@ import os, sys
 import datetime
 import json
 import random
+import ast
 
 from dotenv import load_dotenv
 from typing import Optional
@@ -18,6 +19,7 @@ import blagues_api as bl
 import brawlstats as brst
 import enkanetwork as enk
 import fortnite_api as ftn
+
 #paramètres
 
 #mobile status
@@ -87,7 +89,7 @@ intents = discord.Intents.all()
 client = MyClient(intents=intents)
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
-botlink="https://discordapp.com/users/1102573935658283038"
+botlink=f"https://discordapp.com/users/1102573935658283038"
 DiscordWebSocket.identify = identify
 
 ##commands
@@ -109,11 +111,14 @@ class staff(discord.ui.Modal, title="Candidature"):
         channel=client.get_channel(1130945538406240399)
         emb=discord.Embed(title="Candidature", description=f"{interaction.user.display_name} vient de postuler :", color = discord.Colour.blurple(), timestamp=datetime.datetime.now())
         emb.add_field(name="Rôle sujet au recrutement :",value=self.role, inline=True)
-        emb.add_field(name="Raison",value=self.reason, inline=True)
+        emb.add_field(name="Raison",value=self.reason, inline=False)
         emb.set_thumbnail(url=f"{interaction.user.avatar}")        
         emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
 #send embed to mod chat
-        await channel.send(embed=emb)
+        e = await channel.send(embed=emb)
+        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+        for i in range(len(emojilist)):
+            await e.add_reaction(emojilist[i])
 
 @client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.")
 async def staff_app(interaction: discord.Interaction):
@@ -408,12 +413,13 @@ async def on_message(message: discord.Message):
 # en gros, si y a un message, si le message n'a pas été envoyé par moi, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
 
     if not message.author.id == 911467405115535411:
-        word1 = ["quoi", "QUOI", "Quoi", "quoi ?", "QUOI ?", "Quoi ?", "quoi?", "QUOI?", "Quoi?"]
+        word1 = ["quoi", "quoi ?", "quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
-            if message.content.endswith(word1[i]):  #Verifie si la combinaison est dans le message ET si x = 1
+            e = word1[i].casefold()
+            if message.content.endswith(e):  #Verifie si la combinaison est dans le message ET si x = 1
                 await message.reply("coubaka! UwU")
                 break
-        if message.content.startswith("<@1102573935658283038>"):
+        if message.content.startswith(f"<@{client.user.id}>"):
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
@@ -432,9 +438,7 @@ async def on_message(message: discord.Message):
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
-    global x
-    game = iter(
-        [
+    game = [
             "pas ma mère sur Pornhub !",
             "à quoi jouent les membres du serveur",
             "Chainsaw Man sur Crunchyroll",
@@ -473,11 +477,10 @@ async def changepresence():
             "le journal de la Boulangerie",
             "Nightye qui a retrouvé le trophée 1m de Wankil",        
         ]
-    )   #liste des statuts du bot ^
-    for x in range(random.randint(1, 37)):  # le nombre total de statuts différents
-        x = next(game)
-    activity = discord.Activity(type = discord.ActivityType.watching, name=f"{x}")
+    activity = discord.Activity(type = discord.ActivityType.watching, name=f"{game[random.randint(1, len(game)-1)]}")
     await client.change_presence(activity=activity, status=discord.Status.online)
+
+
 
 
 #login check + bot login events
