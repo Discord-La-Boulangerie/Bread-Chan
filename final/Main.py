@@ -1,5 +1,5 @@
 #Import des libs python de base
-import os, sys
+import os, sys, pythonwin
 import datetime
 import json
 import random
@@ -13,6 +13,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
+from discord.utils import MISSING, get
 
 #Import des API
 import blagues_api as bl
@@ -91,38 +92,52 @@ guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
 botlink=f"https://discordapp.com/users/1102573935658283038"
 DiscordWebSocket.identify = identify
-
+logs_channel = 1131864743502696588
 ##commands
 #ping
-@client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
+@client.tree.command(name="ping", description="[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
-    emb=discord.Embed(description="Pong ! 🏓", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
-    emb.set_author(name=client.user.display_name, icon_url=client.user.avatar, url=f"{botlink}") # type: ignore
-    emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore            
+    emb=discord.Embed(description=f"Pong ! 🏓 {round(client.latency, 1)}", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
+
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
+@client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot", guild=guild_id1)
+async def botinfo(interaction: discord.Interaction):
+    emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
+    emb.set_footer(text=client.user, icon_url=client.user.avatar) # type: ignore
+    emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI \nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
+    await interaction.response.send_message(embed=emb, ephemeral=True)
+
+
 #staff app system
-class staff(discord.ui.Modal, title="Candidature"):
+@client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.")
+async def staff_app(interaction: discord.Interaction, file: Optional[discord.Attachment]):
+    e = file
+    await interaction.response.send_modal(staff(e))
+
+class staff(discord.ui.Modal):
+    def __init__(self, e):
+        self.e = e
+        super().__init__(title="Candidature")
+        
     role = discord.ui.TextInput(label='rôle', style=discord.TextStyle.paragraph, max_length=200, placeholder="décrit nous quel rôle tu souhaite avoir", required = True)
     reason = discord.ui.TextInput(label='raison', style=discord.TextStyle.paragraph, max_length=2000, placeholder="hésitez pas avec les détails, vous avez de la place", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"ta candidature a bien été enregistrée {interaction.user.mention} !", ephemeral=True)
-        channel=client.get_channel(1130945538406240399)
         emb=discord.Embed(title="Candidature", description=f"{interaction.user.display_name} vient de postuler :", color = discord.Colour.blurple(), timestamp=datetime.datetime.now())
-        emb.add_field(name="Rôle sujet au recrutement :",value=self.role, inline=True)
+        emb.add_field(name="Rôle sujet au recrutement :",value=self.role, inline=False)
         emb.add_field(name="Raison",value=self.reason, inline=False)
         emb.set_thumbnail(url=f"{interaction.user.avatar}")        
         emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
 #send embed to mod chat
-        e = await channel.send(embed=emb)
+        staff = client.get_channel(1130945538406240399)
+        staffmsg = await staff.send(embed=emb, file=self.e)
+
         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
         for i in range(len(emojilist)):
-            await e.add_reaction(emojilist[i])
+            await staffmsg.add_reaction(emojilist[i])
 
-@client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.")
-async def staff_app(interaction: discord.Interaction):
-    await interaction.response.send_modal(staff())
 
 #sendrule
 @client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
@@ -161,7 +176,7 @@ async def profil(interaction: discord.Interaction, user: discord.Member):
 
 #NEW
     emb = discord.Embed(
-    title=f"Profile de {user.display_name}",
+    title=f"Profil de {user.display_name}",
     color=user.color,
     timestamp= datetime.datetime.now()   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
     )
@@ -214,26 +229,35 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
 @app_commands.rename(file="fichier")
 @app_commands.default_permissions(moderate_members=True)
 async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason:Optional[str], file: Optional[discord.Attachment]):
-    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
+    channel = await client.fetch_channel(1131864743502696588)
+    if not interaction.user.id == member.id:  
         if interaction.user.top_role.position <= member.top_role.position: #type: ignore
-            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
+            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
             await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
         else:
             if reason == None:
-                await member.timeout(datetime.timedelta(seconds=float(duration)), reason=reason)
-                await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
-                channel = await client.fetch_channel(1131864743502696588)
-                emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
+                await member.timeout(datetime.timedelta(seconds=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
+                await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes", ephemeral=True)
+                emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
                 emb.set_field_at(index=1, name="preuve de la raison du mute", value=file)
                 await channel.send(embed=emb) #type: ignore
-
-    else:
-        await member.timeout(datetime.timedelta(seconds=float(duration)))
-        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
-        channel = await client.fetch_channel(1131864743502696588)
-        emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}")
-        emb.set_image(url=file)
-        await channel.send(embed=emb) #type: ignore
+            else:
+                await member.timeout(datetime.timedelta(seconds=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
+                await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
+                emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
+                emb.set_field_at(index=1, name="preuve de la raison du mute", value=file)
+                await channel.send(embed=emb) #type: ignore
+    
+    if interaction.user.id == member.id:
+        await interaction.response.send_message("wtf t'as vraiment pas d'amour propre pour essayer de te mute toi-même ou ca se passe comment ?", ephemeral=True)
+    else :
+        if interaction.user.id == interaction.guild.owner_id : #type: ignore:
+            await member.timeout(datetime.timedelta(seconds=float(duration)))
+            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
+            emb = discord.Embed(title="Sanction", description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
+            emb.set_image(url=file)
+            await channel.send(embed=emb) #type: ignore
+        
 
 @client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié", guild=guild_id1)
 @app_commands.rename(member="membre")
@@ -372,18 +396,47 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
 
 #auto events
 @client.event
+async def on_message_edit(before, after):
+    if before.author == client.user:
+        return
+    else:
+        channel = client.get_channel(1131864743502696588)
+        emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
+        emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
+        emb.add_field(name="avant", value=before.content, inline=True)
+        emb.add_field(name="après", value=after.content, inline=True)
+        emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
+        emb.set_thumbnail(url=after.author.display_avatar)
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+        await channel.send(embed=emb)
+
+@client.event
+async def on_message_delete(message: discord.Message):
+    if message.author == client.user:
+        return
+    else:
+        async for msg in message.guild.audit_logs(action=discord.AuditLogAction.message_delete, limit=1):
+            delete_by = "{0.user}".format(msg).replace("#0","")
+            emb=discord.Embed(title=f"{delete_by} a supprimé un message", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+            emb.add_field(name='chat:', value=message.channel.jump_url)
+            channel=client.get_channel(logs_channel)
+            await channel.send(embed=emb)
+
+#auto events
+@client.event
 async def on_member_remove(member: discord.Member):
     channel=client.get_channel(1130945537907114139)
     emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
-    emb.set_author(name="BreadBot", icon_url=client.user.avatar, url=f"{botlink}")
-    emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)       
+    emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
+    emb.set_footer(text=client.user, icon_url=client.user.avatar)       
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
 
 @client.event 
 async def on_member_join(member: discord.Member):
-    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four ! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
-    emb.set_author(name="BreadBot", icon_url=client.user.avatar, url=f"{botlink}")
-    emb.set_footer(text=f"{member.name}, sur {member.guild.name}", icon_url=member.guild.icon)            
+    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
+    emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
+    emb.set_footer(text=client.user, icon_url=client.user.avatar)
+    emb.add_field(name="", value="")
     channel = client.get_channel(1130945537907114139)
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
 
@@ -393,25 +446,38 @@ async def on_message(message: discord.Message):
         return
     if message.channel.id == 1134102319580069898:
         qotd = await message.create_thread(name=f"QOTD de {message.author.display_name}")
-        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.mention}")
+        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.name}")
     
     if message.channel.id == 1130945537907114141:
         announcements = await message.create_thread(name=f"Annonce de {message.author.display_name}")
-        botmsg = await announcements.send(f"Thread créé automatiquement pour l'annonce de {message.author.mention}")
+        botmsg = await announcements.send(f"Thread créé automatiquement pour l'annonce de {message.author.name}")
         await message.publish()
         await botmsg.pin()
-    if not message.author.id == 911467405115535411:
-        if message.channel.id == 1132379187227930664:
-            if not message.attachments:
-                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
-                for i in range(len(word)):
-                    if word[i] in message.content:
-                        return
-                    else:    
-                        await message.delete()
-                        await message.author.send(f"tu n'as pas la permission d'envoyer des messages textuels dans {message.channel.mention} 🙄") #type: ignore
-# en gros, si y a un message, si le message n'a pas été envoyé par moi, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
-
+    if message.channel.id == 1132379187227930664:
+        hornywhitelist = ["911467405115535411", "601041630081974292"]
+        for _ in range(len(hornywhitelist)):
+            if hornywhitelist[_] in str(message.author.id):
+                return
+            else:
+                if not message.attachments:
+                    word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                    for i in range(len(word)):
+                        if word[i] in str(message.content):
+                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                            for i in range(len(emojilist)):
+                                return message.add_reaction(emojilist[i])
+                        else:
+                            try:
+                                await message.delete()
+                            except discord.errors.NotFound as err:
+                                print(err)
+                            else:
+                                await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("C:/Users/conta/Documents/GitHub/Discord-Bread-Chan/src/img/Steam-access-is-denied.webp"))
+                else:           
+                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                    for i in range(len(emojilist)):
+                        return message.add_reaction(emojilist[i])
+# en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
         word1 = ["quoi", "quoi ?", "quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
@@ -419,7 +485,7 @@ async def on_message(message: discord.Message):
             if message.content.endswith(e):  #Verifie si la combinaison est dans le message ET si x = 1
                 await message.reply("coubaka! UwU")
                 break
-        if message.content.startswith(f"<@{client.user.id}>"):
+        if message.content.startswith(client.user.mention):
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
@@ -434,6 +500,7 @@ async def on_message(message: discord.Message):
         if word2[i] in message.content:
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
             await message.reply(content=f"[résolution du lien :]({vxTiktokResolver})", mention_author=False)
+
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
@@ -480,14 +547,11 @@ async def changepresence():
     activity = discord.Activity(type = discord.ActivityType.watching, name=f"{game[random.randint(1, len(game)-1)]}")
     await client.change_presence(activity=activity, status=discord.Status.online)
 
-
-
-
 #login check + bot login events
 @client.event
 async def on_ready():
     print("="*10 + " Build Infos " + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
-    print(f"Discord info : {discord.version_info.releaselevel}")
+    print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
 client.run(str(DISCORD_TOKEN))
