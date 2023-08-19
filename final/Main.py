@@ -419,10 +419,19 @@ async def on_message_delete(message: discord.Message):
     if message.author.bot == True:
         return
     else:
-        emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-        emb.add_field(name='chat:', value=message.channel.jump_url)
-        channel=client.get_channel(logs_channel)
-        await channel.send(embed=emb)
+        if message.channel.id == 1132379187227930664:
+            if message.attachments:
+                save = os.
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb.add_field(name='chat:', value=message.channel.jump_url)
+                emb.add_field(name="pièce jointe:", value=message.attachments)
+                channel=client.get_channel(logs_channel)
+                await channel.send(embed=emb)
+            else:
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb.add_field(name='chat:', value=message.channel.jump_url)
+                channel=client.get_channel(logs_channel)
+                await channel.send(embed=emb)
 
 #auto events
 @client.event
