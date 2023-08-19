@@ -399,6 +399,8 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
 async def on_message_edit(before, after):
     if before.author == client.user:
         return
+    if before.author.bot == True:
+        return
     else:
         channel = client.get_channel(1131864743502696588)
         emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
@@ -414,13 +416,13 @@ async def on_message_edit(before, after):
 async def on_message_delete(message: discord.Message):
     if message.author == client.user:
         return
+    if message.author.bot == True:
+        return
     else:
-        async for msg in message.guild.audit_logs(action=discord.AuditLogAction.message_delete, limit=1):
-            delete_by = "{0.user}".format(msg).replace("#0","")
-            emb=discord.Embed(title=f"{delete_by} a supprimé un message", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-            emb.add_field(name='chat:', value=message.channel.jump_url)
-            channel=client.get_channel(logs_channel)
-            await channel.send(embed=emb)
+        emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+        emb.add_field(name='chat:', value=message.channel.jump_url)
+        channel=client.get_channel(logs_channel)
+        await channel.send(embed=emb)
 
 #auto events
 @client.event
@@ -444,6 +446,8 @@ async def on_member_join(member: discord.Member):
 async def on_message(message: discord.Message):
     if message.author == client.user:
         return
+    if message.author.bot == True:
+        return
     if message.channel.id == 1134102319580069898:
         qotd = await message.create_thread(name=f"QOTD de {message.author.display_name}")
         await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.name}")
@@ -457,7 +461,12 @@ async def on_message(message: discord.Message):
         hornywhitelist = ["911467405115535411", "601041630081974292"]
         for _ in range(len(hornywhitelist)):
             if hornywhitelist[_] in str(message.author.id):
-                return
+                if message.attachments:
+                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                    for i in range(len(emojilist)):
+                        await message.add_reaction(emojilist[i])
+                else:
+                    break
             else:
                 if not message.attachments:
                     word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
@@ -465,18 +474,21 @@ async def on_message(message: discord.Message):
                         if word[i] in str(message.content):
                             emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                             for i in range(len(emojilist)):
-                                return message.add_reaction(emojilist[i])
+                                await message.add_reaction(emojilist[i])
+                                break
                         else:
                             try:
                                 await message.delete()
                             except discord.errors.NotFound as err:
                                 print(err)
                             else:
-                                await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("C:/Users/conta/Documents/GitHub/Discord-Bread-Chan/src/img/Steam-access-is-denied.webp"))
-                else:           
+                                await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
+                                return
+                else:
                     emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                     for i in range(len(emojilist)):
-                        return message.add_reaction(emojilist[i])
+                        await message.add_reaction(emojilist[i])
+
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
         word1 = ["quoi", "quoi ?", "quoi?"]
