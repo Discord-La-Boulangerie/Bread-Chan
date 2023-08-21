@@ -4,7 +4,6 @@ import datetime
 import json
 import random
 import ast
-
 from dotenv import load_dotenv
 from typing import Optional
 
@@ -84,8 +83,8 @@ class MyClient(discord.Client):
     # Instead of specifying a guild to every command, we copy over our global commands instead.
     # By doing so, we don't have to wait up to an hour until they are shown to the end-user.
     async def setup_hook(self):
-        await self.tree.sync(guild=guild_id1)
         await self.tree.sync()
+        await self.tree.sync(guild=guild_id1)
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
 guild_id = 1130945537181499542
@@ -110,7 +109,7 @@ async def botinfo(interaction: discord.Interaction):
 
 
 #staff app system
-@client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.")
+@client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.", guild=guild_id1)
 async def staff_app(interaction: discord.Interaction, file: Optional[discord.Attachment]):
     e = file
     await interaction.response.send_modal(staff(e))
@@ -140,7 +139,7 @@ class staff(discord.ui.Modal):
 
 
 #sendrule
-@client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
     channel=client.get_channel(1130945537907114137)
@@ -196,7 +195,7 @@ class SimpleView(discord.ui.View):
         self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
 
 #sanctions system
-@client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié") #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.rename(member="membre")
 @app_commands.describe(member="l'utilisateur à ban")
 @app_commands.rename(reason="raison")
@@ -421,7 +420,6 @@ async def on_message_delete(message: discord.Message):
     else:
         if message.channel.id == 1132379187227930664:
             if message.attachments:
-                save = os.
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
                 emb.add_field(name='chat:', value=message.channel.jump_url)
                 emb.add_field(name="pièce jointe:", value=message.attachments)
@@ -453,8 +451,6 @@ async def on_member_join(member: discord.Member):
 
 @client.event
 async def on_message(message: discord.Message):
-    if message.author == client.user:
-        return
     if message.author.bot == True:
         return
     if message.channel.id == 1134102319580069898:
@@ -512,7 +508,7 @@ async def on_message(message: discord.Message):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
         randcramptes1 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
         for i in range(len(randcramptes1)):    #Check pour chaque combinaison
-            randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1120352052871176292/1135884018185928754/Oh_no_cringe_but_in_french.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
+            randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
             if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
                 await message.reply(random.choice(randcramptes2))
                 break
