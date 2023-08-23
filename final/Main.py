@@ -1,11 +1,11 @@
 #Import des libs python de base
-import os, sys, pythonwin
+import os, sys
 import datetime
 import json
 import random
-import ast
 from dotenv import load_dotenv
 from typing import Optional
+from io import BytesIO
 
 #Import de discord et modules discord
 import discord 
@@ -19,6 +19,7 @@ import blagues_api as bl
 import brawlstats as brst
 import enkanetwork as enk
 import fortnite_api as ftn
+from rule34Py import rule34Py as r34
 
 #paramètres
 
@@ -516,8 +517,8 @@ async def on_message(message: discord.Message):
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
-            await message.reply(content=f"[résolution du lien :]({vxTiktokResolver})", mention_author=False)
-
+            await message.channel.send(content=f"résolution du lien Tiktok envoyé à l'origine par {message.author.display_name}[:]({vxTiktokResolver})")
+            await message.delete()
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
