@@ -497,6 +497,8 @@ async def on_message(message: discord.Message):
 
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
+        if "bite" in message.content:
+            await message.channel.send("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
         word1 = ["quoi", "quoi ?", "quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
             e = word1[i].casefold()
