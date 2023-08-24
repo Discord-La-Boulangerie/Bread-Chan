@@ -6,6 +6,7 @@ import random
 from dotenv import load_dotenv
 from typing import Optional
 from io import BytesIO
+import asyncio
 
 #Import de discord et modules discord
 import discord 
@@ -393,7 +394,7 @@ class say(discord.ui.Modal, title="contenu du reply"):
 async def pins(interaction: discord.Interaction, message: discord.Message):
     msg = message
     await interaction.response.send_modal(say(msg))
-
+    await interaction.channel.typing()
 #auto events
 @client.event
 async def on_message_edit(before, after):
@@ -498,14 +499,19 @@ async def on_message(message: discord.Message):
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
         if "bite" in message.content:
-            await message.channel.send("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
+            await message.channel.typing()
+            await asyncio.sleep(2)
+            await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
         word1 = ["quoi", "quoi ?", "quoi?"]
         for i in range(len(word1)):    #Check pour chaque combinaison
             e = word1[i].casefold()
             if message.content.endswith(e):  #Verifie si la combinaison est dans le message ET si x = 1
+                await message.channel.typing()
                 await message.reply("coubaka! UwU")
                 break
         if message.content.startswith(client.user.mention):
+            await message.channel.typing()
+            await asyncio.sleep(3)
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
@@ -513,6 +519,7 @@ async def on_message(message: discord.Message):
         for i in range(len(randcramptes1)):    #Check pour chaque combinaison
             randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
             if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
+                await message.channel.typing()
                 await message.reply(random.choice(randcramptes2))
                 break
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
