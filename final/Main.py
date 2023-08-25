@@ -402,6 +402,8 @@ async def on_message_edit(before, after):
         return
     if before.author.bot == True:
         return
+    if before.content == after.content:
+        return
     else:
         if before.guild.id ==1130945537181499542:
             channel = client.get_channel(1131864743502696588)
@@ -423,7 +425,8 @@ async def on_message_edit(before, after):
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
             await channel.send(embed=emb) 
-
+        else:
+            return
 @client.event
 async def on_message_delete(message: discord.Message):
     if message.author == client.user:
