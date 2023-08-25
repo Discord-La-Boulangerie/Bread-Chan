@@ -403,15 +403,26 @@ async def on_message_edit(before, after):
     if before.author.bot == True:
         return
     else:
-        channel = client.get_channel(1131864743502696588)
-        emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
-        emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
-        emb.add_field(name="avant", value=before.content, inline=True)
-        emb.add_field(name="après", value=after.content, inline=True)
-        emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
-        emb.set_thumbnail(url=after.author.display_avatar)
-        emb.set_footer(text=client.user, icon_url=client.user.avatar)
-        await channel.send(embed=emb)
+        if before.guild.id ==1130945537181499542:
+            channel = client.get_channel(1131864743502696588)
+            emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
+            emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
+            emb.add_field(name="avant", value=before.content, inline=True)
+            emb.add_field(name="après", value=after.content, inline=True)
+            emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
+            emb.set_thumbnail(url=after.author.display_avatar)
+            emb.set_footer(text=client.user, icon_url=client.user.avatar)
+            await channel.send(embed=emb)   
+        if before.guild.id ==1130798906586959946:
+            channel = client.get_channel(1141995718228324482)
+            emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
+            emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
+            emb.add_field(name="avant", value=before.content, inline=True)
+            emb.add_field(name="après", value=after.content, inline=True)
+            emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
+            emb.set_thumbnail(url=after.author.display_avatar)
+            emb.set_footer(text=client.user, icon_url=client.user.avatar)
+            await channel.send(embed=emb) 
 
 @client.event
 async def on_message_delete(message: discord.Message):
@@ -420,18 +431,18 @@ async def on_message_delete(message: discord.Message):
     if message.author.bot == True:
         return
     else:
-        if message.channel.id == 1132379187227930664:
-            if message.attachments:
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-                emb.add_field(name='chat:', value=message.channel.jump_url)
-                emb.add_field(name="pièce jointe:", value=message.attachments)
-                channel=client.get_channel(logs_channel)
-                await channel.send(embed=emb)
-            else:
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-                emb.add_field(name='chat:', value=message.channel.jump_url)
-                channel=client.get_channel(logs_channel)
-                await channel.send(embed=emb)
+        if message.guild.id == 1130945537181499542:
+            channel=client.get_channel(1131864743502696588)
+            emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+            emb.add_field(name='chat:', value=message.channel.jump_url)
+            await channel.send(embed=emb)
+        if message.guild.id ==1130798906586959946:
+            channel=client.get_channel(1141995718228324482)
+            emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+            emb.add_field(name='chat:', value=message.channel.jump_url)
+            await channel.send(embed=emb)
+        else:
+            return
 
 #auto events
 @client.event
