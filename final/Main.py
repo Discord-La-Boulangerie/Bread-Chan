@@ -288,6 +288,61 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
         channel = await client.fetch_channel(1130945537907114139)
         await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
 
+@client.tree.command(name="webhook", description="envoie un message via un webhook", guild=guild_id1)
+@app_commands.default_permissions(manage_guild=True)
+@app_commands.describe(texte=f"ce que tu veux que le webhook dise")
+@app_commands.describe(nom="le nom du webhook")
+@app_commands.describe(channel="le chat dans lequel ca s'enverra")
+@app_commands.describe(file="la photo de profil du webhook")
+async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, channel: Optional[discord.TextChannel], file: Optional[discord.Attachment]):
+    if channel == None:
+        print(file)
+        if file == None:
+            webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=None,reason="tkt")
+            await webhookcreate.send(texte)
+            await interaction.response.send_message(content=f"webhook envoyé dans {interaction.channel}", ephemeral=True)
+            await asyncio.sleep(2)
+            await webhookcreate.send(texte)
+            edit = await interaction.original_response()
+            await edit.edit(content="webhook envoyé!") 
+            await asyncio.sleep(5)
+            await webhookcreate.delete()
+            await edit.delete()
+        if not file == None:
+            pdp = await file.read()
+            webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
+            await interaction.response.send_message(content=f"webhook en cours d'envoi dans {interaction.channel}...", ephemeral=True)
+            await asyncio.sleep(2)
+            await webhookcreate.send(texte)
+            edit = await interaction.original_response()
+            await edit.edit(content="webhook envoyé!") 
+            await asyncio.sleep(5)
+            await webhookcreate.delete()
+            await edit.delete()
+    if not channel == None:
+        print(file)
+        if file == None:
+            webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=None,reason="tkt")
+            await interaction.response.send_message(content=f"webhook en cours d'envoi dans {interaction.channel}...", ephemeral=True)
+            await asyncio.sleep(2)
+            await webhookcreate.send(texte)
+            edit = await interaction.original_response()
+            await edit.edit(content="webhook envoyé!") 
+            await asyncio.sleep(5)
+            await webhookcreate.delete()
+            await edit.delete()
+        if not file == None:
+            pdp = await file.read()
+            webhookcreate = await channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
+            await interaction.response.send_message(content=f"webhook en cours d'envoi dans {channel}...", ephemeral=True)
+            await asyncio.sleep(2)
+            await webhookcreate.send(texte)
+            edit = await interaction.original_response()
+            await edit.edit(content="webhook envoyé!") 
+            await asyncio.sleep(5)
+            await webhookcreate.delete()
+            await edit.delete()
+
 @client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
 @app_commands.default_permissions(manage_guild=True)
 async def sync(interaction: discord.Interaction):
@@ -406,7 +461,6 @@ async def on_message_edit(before, after):
         return
     else:
         if before.guild.id ==1130945537181499542:
-            channel = client.get_channel(1131864743502696588)
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
@@ -414,9 +468,9 @@ async def on_message_edit(before, after):
             emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
-            await channel.send(embed=emb)   
+            webfetch = await client.fetch_webhook(1144701067943219271)
+            await webfetch.send(embed=emb)
         if before.guild.id ==1130798906586959946:
-            channel = client.get_channel(1141995718228324482)
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
@@ -424,9 +478,11 @@ async def on_message_edit(before, after):
             emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
-            await channel.send(embed=emb) 
+            webfetch = await client.fetch_webhook(1144701067943219271)
+            await webfetch.send(embed=emb)
         else:
             return
+
 @client.event
 async def on_message_delete(message: discord.Message):
     if message.author == client.user:
@@ -435,18 +491,20 @@ async def on_message_delete(message: discord.Message):
         return
     else:
         if message.guild.id == 1130945537181499542:
-            channel=client.get_channel(1131864743502696588)
+            webhookpdp = await client.user.avatar.read()
             emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-            emb.add_field(name='chat:', value=message.channel.jump_url)
-            await channel.send(embed=emb)
+            emb.add_field(name="chat:", value=message.channel.jump_url)
+            webfetch = await client.fetch_webhook(1144701067943219271)
+            await webfetch.edit(avatar=webhookpdp)
+            await webfetch.send(embed=emb)
+        
         if message.guild.id ==1130798906586959946:
-            channel=client.get_channel(1141995718228324482)
+            webhookpdp = await client.user.avatar.read()
             emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
             emb.add_field(name='chat:', value=message.channel.jump_url)
-            await channel.send(embed=emb)
-        else:
-            return
-
+            webfetch = await client.fetch_webhook(1144703283605286962)
+            await webfetch.edit(avatar=webhookpdp)
+            await webfetch.send(embed=emb)
 #auto events
 @client.event
 async def on_member_remove(member: discord.Member):
@@ -464,6 +522,7 @@ async def on_member_join(member: discord.Member):
     emb.add_field(name="", value="")
     channel = client.get_channel(1130945537907114139)
     await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+
 
 @client.event
 async def on_message(message: discord.Message):
@@ -595,4 +654,14 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
+    for i in client.guilds:
+        bsemoji = await i.fetch_emoji(1138549194550952048)
+    # Récupère le rôle.
+    # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
+        staffrole = discord.utils.get(i.roles, id=1130945537227632648)
+        botrole = discord.utils.get(i.roles, id=1130945537194078316)
+        devfrole = discord.utils.get(i.roles, id=1144410413069500548)
+        myList = ["Collection", 15, (botrole, devfrole, staffrole)]
+    # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
+        await bsemoji.edit(roles=myList, reason="test")
 client.run(str(DISCORD_TOKEN))
