@@ -258,7 +258,6 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
             emb = discord.Embed(title="Sanction", description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
             emb.set_image(url=file)
             await channel.send(embed=emb) #type: ignore
-        
 
 @client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié", guild=guild_id1)
 @app_commands.rename(member="membre")
