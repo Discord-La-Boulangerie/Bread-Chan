@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from typing import Optional
 from io import BytesIO
 import asyncio
+from collections import Counter
+
 
 #Import de discord et modules discord
 import discord 
@@ -16,6 +18,7 @@ from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING, get
 
 #Import des API
+import unbelipy as unb
 import blagues_api as bl
 import brawlstats as brst
 import enkanetwork as enk
@@ -67,11 +70,13 @@ DISCORD_TOKEN = os.getenv("discord_token")
 BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
+UNB_TOKEN = os.getenv("unbelivaboat_api_token")
 enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
         super().__init__(intents=intents)
+        
         # A CommandTree is a special type that holds all the application command
         # state required to make it work. This is a separate class because it
         # allows all the extra state to be opt-in.
@@ -87,6 +92,7 @@ class MyClient(discord.Client):
     async def setup_hook(self):
         await self.tree.sync()
         await self.tree.sync(guild=guild_id1)
+applicationid = 1102573935658283038
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
 guild_id = 1130945537181499542
@@ -94,8 +100,48 @@ guild_id1 = discord.Object(id=guild_id)
 botlink=f"https://discordapp.com/users/1102573935658283038"
 DiscordWebSocket.identify = identify
 logs_channel = 1131864743502696588
+
+unbclient = unb.UnbeliClient(token=str(UNB_TOKEN))
 ##commands
 #ping
+@client.tree.command(name="cash", description="[FUN] indique combien d'argent en cash possède l'utilisateur", guild=guild_id1)
+async def unbcash(interaction: discord.Interaction, user: Optional[discord.Member]):
+    if user == None:
+        user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=interaction.user.id)
+        await interaction.response.send_message(f"voici ton cash : {user_balance.cash} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
+    if not user == None:
+        user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=user.id)
+        await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.cash} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
+        await unbclient.close_session()
+
+@client.tree.command(name="bank", description="[FUN] indique combien d'argent en banque possède l'utilisateur", guild=guild_id1)
+async def unbbank(interaction: discord.Interaction, user: Optional[discord.Member]):
+    if user == None:
+        user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=interaction.user.id)
+        await interaction.response.send_message(f"voici ton cash : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
+    if not user == None:
+        user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=user.id)
+        await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
+        await unbclient.close_session()
+
+@client.tree.command(name="leaderboard", description="[FUN] indique le classement global du serveur", guild=guild_id1)
+async def leaderboard(interaction: discord.Interaction):
+    guild_leaderboard = await unbclient.get_guild_leaderboard(guild_id)
+    await interaction.response.send_message(content="test", view=verifyview(interaction), ephemeral=True)
+
+class verifyview(discord.ui.View):
+    def __init__(self, interaction):
+        self.interaction = interaction
+        super().__init__()
+
+    @discord.ui.button(label="précédent", style=discord.ButtonStyle.green)
+    async def on_click1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.interaction.edit_original_response(content="test1")
+    
+    @discord.ui.button(label="suivant", style=discord.ButtonStyle.red)
+    async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.interaction.edit_original_response(content="test2")
+
 @client.tree.command(name="ping", description="[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
     emb=discord.Embed(description=f"Pong ! 🏓 {round(client.latency, 1)}", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
@@ -105,7 +151,7 @@ async def pingpong(interaction: discord.Interaction):
 @client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot", guild=guild_id1)
 async def botinfo(interaction: discord.Interaction):
     emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
-    emb.set_footer(text=client.user, icon_url=client.user.avatar) # type: ignore
+    emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
     emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI \nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
@@ -138,7 +184,6 @@ class staff(discord.ui.Modal):
         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
         for i in range(len(emojilist)):
             await staffmsg.add_reaction(emojilist[i])
-
 
 #sendrule
 @client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
@@ -450,6 +495,16 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
     await interaction.response.send_modal(say(msg))
     await interaction.channel.typing()
 #auto events
+
+class trollview(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        # Link buttons cannot be made with the decorator
+        # Therefore we have to manually create one.
+        # We add the quoted url to the button, and add the button to the view.
+        self.add_item(discord.ui.Button(emoji="<:LBroger:1136059237441749132>", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+
 @client.event
 async def on_message_edit(before, after):
     if before.author == client.user:
@@ -463,21 +518,19 @@ async def on_message_edit(before, after):
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
-            emb.add_field(name="après", value=after.content, inline=True)
-            emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
+            emb.add_field(name="après", value=f"{after.content}\n\n{after.jump_url}", inline=True)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
-            webfetch = await client.fetch_webhook(1144701067943219271)
+            webfetch = await client.fetch_channel(1131864743502696588)
             await webfetch.send(embed=emb)
         if before.guild.id ==1130798906586959946:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
-            emb.add_field(name="après", value=after.content, inline=True)
-            emb.add_field(name="aller au message :", value=after.jump_url, inline=False)
+            emb.add_field(name="après", value=f"{after.content}\n\n{after.jump_url}", inline=True)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
-            webfetch = await client.fetch_webhook(1144701067943219271)
+            webfetch = await client.fetch_channel(1141995718228324482)
             await webfetch.send(embed=emb)
         else:
             return
@@ -489,21 +542,33 @@ async def on_message_delete(message: discord.Message):
     if message.author.bot == True:
         return
     else:
-        if message.guild.id == 1130945537181499542:
-            webhookpdp = await client.user.avatar.read()
-            emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-            emb.add_field(name="chat:", value=message.channel.jump_url)
-            webfetch = await client.fetch_webhook(1144701067943219271)
-            await webfetch.edit(avatar=webhookpdp)
-            await webfetch.send(embed=emb)
-        
-        if message.guild.id ==1130798906586959946:
-            webhookpdp = await client.user.avatar.read()
-            emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
-            emb.add_field(name='chat:', value=message.channel.jump_url)
-            webfetch = await client.fetch_webhook(1144703283605286962)
-            await webfetch.edit(avatar=webhookpdp)
-            await webfetch.send(embed=emb)
+        if message.guild.id == 1130945537181499542: # La Boulangerie
+            channel = await client.fetch_channel(1131864743502696588)
+            if message.attachments:
+                e = []
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
+                emb.add_field(name="chat:", value=message.channel.jump_url)
+                for i in message.attachments:
+                    e.append(emb.add_field(name=i.filename, value=i.url, inline=False))
+                await channel.send(embed=emb)
+            else:
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb.add_field(name="chat:", value=message.channel.jump_url)
+                await channel.send(embed=emb)
+
+        if message.guild.id ==1130798906586959946: # BreadStudios Lab
+            channel = await client.fetch_channel(1141995718228324482)
+            if message.attachments:
+                e = []
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
+                emb.add_field(name="chat:", value=message.channel.jump_url)
+                for i in message.attachments:
+                    e.append(emb.add_field(name=f"{i.filename}", value=i.url, inline=False))
+                await channel.send(embed=emb)
+            else:
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb.add_field(name="chat:", value=message.channel.jump_url)
+                await channel.send(embed=emb)
 #auto events
 @client.event
 async def on_member_remove(member: discord.Member):
@@ -511,8 +576,8 @@ async def on_member_remove(member: discord.Member):
     emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
     emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
     emb.set_footer(text=client.user, icon_url=client.user.avatar)       
-    await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
-
+    msg = await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+    await msg.add_reaction("<:LBroger:1136059237441749132>")
 @client.event 
 async def on_member_join(member: discord.Member):
     emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
@@ -520,8 +585,8 @@ async def on_member_join(member: discord.Member):
     emb.set_footer(text=client.user, icon_url=client.user.avatar)
     emb.add_field(name="", value="")
     channel = client.get_channel(1130945537907114139)
-    await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
-
+    msg = await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+    await msg.add_reaction("<:LBgigachad:1134177726585122857>")
 
 @client.event
 async def on_message(message: discord.Message):
@@ -537,37 +602,55 @@ async def on_message(message: discord.Message):
         await message.publish()
         await botmsg.pin()
     if message.channel.id == 1132379187227930664:
-        hornywhitelist = ["911467405115535411", "601041630081974292"]
-        for _ in range(len(hornywhitelist)):
-            if hornywhitelist[_] in str(message.author.id):
-                if message.attachments:
-                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                    for i in range(len(emojilist)):
-                        await message.add_reaction(emojilist[i])
-                else:
-                    break
+        if message.author.id == 601041630081974292:
+            if message.attachments:
+                emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                for i in range(len(emojilist)):
+                    await message.add_reaction(emojilist[i])
+            if not message.attachments:
+                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                for i in range(len(word)):
+                    if word[i] in str(message.content):
+                        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        for i in range(len(emojilist)):
+                            await message.add_reaction(emojilist[i])
+                            break
             else:
-                if not message.attachments:
-                    word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
-                    for i in range(len(word)):
-                        if word[i] in str(message.content):
-                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                            for i in range(len(emojilist)):
-                                await message.add_reaction(emojilist[i])
-                                break
+                return
+        if message.author.id == 911467405115535411:
+            if message.attachments:
+                emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                for i in range(len(emojilist)):
+                    await message.add_reaction(emojilist[i])
+            else:
+                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                for i in range(len(word)):
+                    if word[i] in str(message.content):
+                        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        for i in range(len(emojilist)):
+                            await message.add_reaction(emojilist[i])
+                            break
+        else:
+            if not message.attachments:
+                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                for i in range(len(word)):
+                    if word[i] in str(message.content):
+                        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        for i in range(len(emojilist)):
+                            await message.add_reaction(emojilist[i])
+                            break
+                    else:
+                        try:
+                            await message.delete()
+                        except discord.errors.NotFound as err:
+                            print(err)
                         else:
-                            try:
-                                await message.delete()
-                            except discord.errors.NotFound as err:
-                                print(err)
-                            else:
-                                await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
-                                return
-                else:
-                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                    for i in range(len(emojilist)):
-                        await message.add_reaction(emojilist[i])
-
+                            await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
+                            return
+            else:
+                emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                for i in range(len(emojilist)):
+                    await message.add_reaction(emojilist[i])
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
         if "bite" in message.content:
@@ -600,6 +683,13 @@ async def on_message(message: discord.Message):
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
             await message.channel.send(content=f"résolution du lien Tiktok envoyé à l'origine par {message.author.display_name}[:]({vxTiktokResolver})")
             await message.delete()
+    if message.channel.id == 1130945537907114145:
+        if random.randint(1, 50) == 1:
+            if message.attachments:
+                await message.add_reaction("<:LBmeh:1131556048948449400>")
+        if random.randint(1, 50) == 2:
+            if message.attachments:
+                await message.add_reaction(":recycle:")
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot

@@ -150,7 +150,55 @@ async def snap(interaction: discord.Interaction):
 
     files = discord.File(fp=filename)
     await interaction.response.send_message(file=files, ephemeral=True)
+class Dropdown(discord.ui.Select):
+    def __init__(self, interaction):
 
+        # Set the options that will be presented inside the dropdown
+        options = [
+            discord.SelectOption(label='Stats Générales', description='Trophées, Victoires, etc.'),
+            discord.SelectOption(label='Club', description='Déscription, Membres, etc.'),
+            discord.SelectOption(label='OG Stats', description='XP, Power Points, etc.')
+        ]
+
+        # The placeholder is what will be shown when no option is chosen
+        # The min and max values indicate we can only pick one of the three options
+        # The options parameter defines the dropdown options. We defined this above
+        super().__init__(placeholder='Les stats que tu veux voir...', min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        # Use the interaction object to send a response message containing
+        # the user's favourite colour or choice. The self object refers to the
+        # Select object, and the values attribute gets a list of the user's
+        # selected options. We only want the first one.
+
+        if self.values[0] == 'Stats Générales':
+            printx = "Sucess" 
+            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
+
+        if self.values[0] == 'Club':
+            printx = "ça à marché"
+            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
+
+        if self.values[0] == 'OG Stats':
+            printx = 'mission réussi'
+            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
+
+
+class DropdownView(discord.ui.View):
+    def __init__(self, interaction):
+        super().__init__()
+        self.interaction = interaction
+        # Adds the dropdown to our view object.
+        self.add_item(Dropdown(interaction))
+
+@client.tree.command(name="test", description="hexatest", guild=guild_id)
+async def colour(interaction: discord.Interaction):
+
+    # Create the view containing our dropdown
+    view = DropdownView(interaction)
+
+    # Sending a message containing our view
+    await interaction.response.send_message(view=view)
 
 @client.tree.command(name="uid_save", description="[FUN][INFO] enregistre ton UID Genshin Impact", guild=guild_id)
 @app_commands.describe(amount="l'UID de ton compte Genshin Impact")
