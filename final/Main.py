@@ -22,8 +22,8 @@ import unbelipy as unb
 import blagues_api as bl
 import brawlstats as brst
 import enkanetwork as enk
+from enkanetwork.model.stats import Stats
 import fortnite_api as ftn
-from rule34Py import rule34Py as r34
 
 #paramètres
 
@@ -403,55 +403,56 @@ async def sync(interaction: discord.Interaction):
 @app_commands.describe(choix="Choisissez le jeu (pour le moment seul Genshin Impact fonctionne, à moitié)")
 @app_commands.describe(uid="le pseudo ou identifiant de l'utilisateur")
 async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[str], uid: str):
-    if choix.value == "bs":
-        await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
-    if choix.value == "fn":
-        await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
-    if choix.value == "gi":
-        data = await enkaclient.fetch_user(uid)
-    try: 
-        data = await enkaclient.fetch_user(uid)
-    except enk.EnkaPlayerNotFound as vr:
-        emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
-        emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
-        emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-        await interaction.response.send_message(embed=emb, ephemeral=True)
-    else:
-        emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
-        emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
-        emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
-        emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-        await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
+        if choix.value == "bs":
+            await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
+        if choix.value == "fn":
+            await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
+        if choix.value == "gi":
+            data = await enkaclient.fetch_user(uid)
+        try: 
+            data = await enkaclient.fetch_user(uid)
+        except enk.VaildateUIDError as vr:
+            emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
+            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True)
+        else:
+            emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
+            emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
+            emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
         self.data = data
         # Set the options that will be presented inside the dropdown
         options=[]
         for char in self.data.characters:
-            self.char = char
-            options.append(discord.SelectOption(label=f"{char.name}", description=f"le build de {char.name}", value=char.id)) # add dropdown option for each character in data.character
+            self.char= char
+            options.append(discord.SelectOption(label=char.name, description=f"le build de {char.name}", value=char.name.lower())) # add dropdown option for each character in data.character
             super().__init__(placeholder="Sélectionne le build que tu souhaite regarder :", min_values=1, max_values=1, options=options)
-            
-        # The placeholder is what will be shown when no option is chosen
+        # The placeholder is what will be shown when no option is chosen 
         # The min and max values indicate we can only pick one of the three options
         # The options parameter defines the dropdown options. We defined this above
     async def callback(self, interaction: discord.Interaction):
-
         # Use the interaction object to send a response message containing
         # the user's favourite colour or choice. The self object refers to the
         # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-            emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.char.name}", description=f"Voici les informations du personnage:\n\ncrit rate: {self.char.stats.FIGHT_PROP_CRITICAL.to_percentage_symbol()}", color = discord.Color.green(), timestamp=datetime.datetime.now())
-            emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
-            emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
-            await interaction.response.send_message(f"Voici le build de {self.values[0]}:", ephemeral=True, embed=emb)
+        emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0].title()}", description=f"Voici les informations du personnage:\n\ncrit rate: {NotImplemented}", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
+        emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
+        await interaction.response.send_message(f"Voici le build de {self.values[0].title()}:", ephemeral=True, embed=emb)
 
 class DropdownView(discord.ui.View):
     def __init__(self, data):
-        super().__init__(timeout=float(120))
+        super().__init__(timeout=float(10))
         self.data = data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
+
+        async def on_timeout():
+            self.clear_items
 #report system
 
 #def modal
@@ -495,15 +496,6 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
     await interaction.response.send_modal(say(msg))
     await interaction.channel.typing()
 #auto events
-
-class trollview(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-
-        # Link buttons cannot be made with the decorator
-        # Therefore we have to manually create one.
-        # We add the quoted url to the button, and add the button to the view.
-        self.add_item(discord.ui.Button(emoji="<:LBroger:1136059237441749132>", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
 
 @client.event
 async def on_message_edit(before, after):
@@ -735,6 +727,15 @@ async def changepresence():
         ]
     activity = discord.Activity(type = discord.ActivityType.watching, name=f"{game[random.randint(1, len(game)-1)]}")
     await client.change_presence(activity=activity, status=discord.Status.online)
+
+@client.event
+async def on_audit_logs_entry_create(entry: discord.AuditLogEntry):
+    if entry.guild.id == 1130945537181499542:
+        channel = client.get_channel(1131864743502696588)
+        emb= discord.Embed(title="Logs", description=f"{entry.user} ({entry.user_id}) a {entry.action}\n raison: {entry.reason}")
+        await channel.send(embed=emb)
+
+
 
 #login check + bot login events
 @client.event
