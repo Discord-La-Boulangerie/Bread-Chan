@@ -15,7 +15,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
-from discord.utils import MISSING, get
+from discord.utils import MISSING
 
 #Import des API
 import unbelipy as unb
