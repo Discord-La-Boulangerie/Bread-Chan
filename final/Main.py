@@ -5,10 +5,10 @@ import json
 import random
 from dotenv import load_dotenv
 from typing import Optional
+import io
 from io import BytesIO
 import asyncio
 from collections import Counter
-
 
 #Import de discord et modules discord
 import discord 
@@ -549,18 +549,22 @@ async def on_message_delete(message: discord.Message):
                 await channel.send(embed=emb)
 
         if message.guild.id ==1130798906586959946: # BreadStudios Lab
-            channel = await client.fetch_channel(1141995718228324482)
+            channel1 = await client.fetch_channel(1141995718228324482)
+            channel2 = await client.fetch_channel(1150055306676670585)
             if message.attachments:
-                e = []
+                liste = []
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
                 emb.add_field(name="chat:", value=message.channel.jump_url)
-                for i in message.attachments:
-                    e.append(emb.add_field(name=f"{i.filename}", value=i.url, inline=False))
-                await channel.send(embed=emb)
+                for _ in message.attachments:
+                    e = await message.attachments[0].read()
+                    buffer = await channel2.send(file=discord.File(fp=e, filename=message.attachments[0].filename)) 
+                    liste.append(emb.add_field(name=f"{buffer.attachments[0].filename}", value=buffer.attachments[0].url, inline=False))
+                await channel1.send(embed=emb)
             else:
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
                 emb.add_field(name="chat:", value=message.channel.jump_url)
-                await channel.send(embed=emb)
+                await channel1.send(embed=emb)
+
 #auto events
 @client.event
 async def on_member_remove(member: discord.Member):
@@ -585,20 +589,17 @@ async def on_message(message: discord.Message):
     if message.author.bot == True:
         return
     if message.channel.id == 1134102319580069898:
-        qotd = await message.create_thread(name=f"QOTD de {message.author.display_name}")
-        await qotd.send(f"Thread créé automatiquement pour la QOTD de {message.author.name}")
-    
+        await message.create_thread(name=f"QOTD de {message.author.display_name}")
     if message.channel.id == 1130945537907114141:
-        announcements = await message.create_thread(name=f"Annonce de {message.author.display_name}")
-        botmsg = await announcements.send(f"Thread créé automatiquement pour l'annonce de {message.author.name}")
+        await message.create_thread(name=f"Annonce de {message.author.display_name}")
         await message.publish()
-        await botmsg.pin()
     if message.channel.id == 1132379187227930664:
         if message.author.id == 601041630081974292:
             if message.attachments:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
+                    await message.create_thread(name=f"{message.author}")
             if not message.attachments:
                 word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
                 for i in range(len(word)):
@@ -606,7 +607,7 @@ async def on_message(message: discord.Message):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            break
+                            await message.create_thread(name=f"{message.author}")
             else:
                 return
         if message.author.id == 911467405115535411:
@@ -614,6 +615,7 @@ async def on_message(message: discord.Message):
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
+                    await message.create_thread(name=f"{message.author}")
             else:
                 word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
                 for i in range(len(word)):
@@ -621,7 +623,7 @@ async def on_message(message: discord.Message):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            break
+                            await message.create_thread(name=f"{message.author}")
         else:
             if not message.attachments:
                 word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
@@ -630,14 +632,14 @@ async def on_message(message: discord.Message):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            break
+                            await message.create_thread(name=f"{message.author}")
                     else:
                         try:
                             await message.delete()
                         except discord.errors.NotFound as err:
                             print(err)
                         else:
-                            await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
+                            await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp", spoiler=True))
                             return
             else:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
@@ -681,7 +683,26 @@ async def on_message(message: discord.Message):
                 await message.add_reaction("<:LBmeh:1131556048948449400>")
         if random.randint(1, 50) == 2:
             if message.attachments:
-                await message.add_reaction(":recycle:")
+                await message.add_reaction("♻")
+
+@client.event
+async def on_raw_reaction_add(payload):
+    luxurefeed = await client.fetch_channel(1152700138540773437)
+    if payload.channel_id == 1132379187227930664:
+        channel=await client.fetch_channel(payload.channel_id)
+        message=await channel.fetch_message(payload.message_id)
+        e =[]
+        e.append(message.reactions[0].users)
+        print(e)
+        if len(e)==2:
+            emb = discord.Embed(title=f"Feed <:Upvote:1141354962392199319>", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+            emb.set_image(url=message.attachments[0].url)
+            emb.add_field(name="source:", value=message.jump_url)
+            await luxurefeed.send(embed=emb)
+        else:
+            return
+    else:
+        return
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
@@ -728,15 +749,6 @@ async def changepresence():
     activity = discord.Activity(type = discord.ActivityType.watching, name=f"{game[random.randint(1, len(game)-1)]}")
     await client.change_presence(activity=activity, status=discord.Status.online)
 
-@client.event
-async def on_audit_logs_entry_create(entry: discord.AuditLogEntry):
-    if entry.guild.id == 1130945537181499542:
-        channel = client.get_channel(1131864743502696588)
-        emb= discord.Embed(title="Logs", description=f"{entry.user} ({entry.user_id}) a {entry.action}\n raison: {entry.reason}")
-        await channel.send(embed=emb)
-
-
-
 #login check + bot login events
 @client.event
 async def on_ready():
@@ -746,12 +758,11 @@ async def on_ready():
     await changepresence.start()
     for i in client.guilds:
         bsemoji = await i.fetch_emoji(1138549194550952048)
-    # Récupère le rôle.
-    # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
+    # Récupère les rôles.
         staffrole = discord.utils.get(i.roles, id=1130945537227632648)
         botrole = discord.utils.get(i.roles, id=1130945537194078316)
         devfrole = discord.utils.get(i.roles, id=1144410413069500548)
-        myList = ["Collection", 15, (botrole, devfrole, staffrole)]
-    # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
+        myList = ["Collection", 3, (botrole, devfrole, staffrole)]
+    # Ajoute les rôles à la liste des rôles ayant accès aux émojis.
         await bsemoji.edit(roles=myList, reason="test")
 client.run(str(DISCORD_TOKEN))
