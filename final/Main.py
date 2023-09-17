@@ -691,14 +691,16 @@ async def on_raw_reaction_add(payload):
     if payload.channel_id == 1132379187227930664:
         channel=await client.fetch_channel(payload.channel_id)
         message=await channel.fetch_message(payload.message_id)
-        e =[]
-        e.append(message.reactions[0].users)
-        print(e)
-        if len(e)==2:
-            emb = discord.Embed(title=f"Feed <:Upvote:1141354962392199319>", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
-            emb.set_image(url=message.attachments[0].url)
-            emb.add_field(name="source:", value=message.jump_url)
-            await luxurefeed.send(embed=emb)
+        if message.reactions[0].count==2:
+            if message.attachments:
+                emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+                emb.set_image(url=message.attachments[0].url)
+                emb.add_field(name="source:", value=message.jump_url)
+                send = await luxurefeed.send(embed=emb)
+                await send.create_thread(name=f"{message.author.name}'s feed")
+                await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=1000)
+                await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
+
         else:
             return
     else:
