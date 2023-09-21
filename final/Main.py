@@ -597,42 +597,45 @@ async def on_message(message: discord.Message):
         if message.author.id == 601041630081974292:
             if message.attachments:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
-                    await message.create_thread(name=f"{message.author}")
             if not message.attachments:
-                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
                 for i in range(len(word)):
                     if word[i] in str(message.content):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        await message.create_thread(name=f"{message.author}")
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            await message.create_thread(name=f"{message.author}")
+
             else:
                 return
         if message.author.id == 911467405115535411:
             if message.attachments:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
-                    await message.create_thread(name=f"{message.author}")
+
             else:
-                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
                 for i in range(len(word)):
                     if word[i] in str(message.content):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        await message.create_thread(name=f"{message.author}")
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            await message.create_thread(name=f"{message.author}")
+
         else:
             if not message.attachments:
-                word = ["https://cdn.discordapp.com", "https://rule34.xxx", "https://pornhub.com/"]
+                word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
                 for i in range(len(word)):
                     if word[i] in str(message.content):
                         emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                        await message.create_thread(name=f"{message.author}")
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-                            await message.create_thread(name=f"{message.author}")
                     else:
                         try:
                             await message.delete()
@@ -643,8 +646,10 @@ async def on_message(message: discord.Message):
                             return
             else:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
+
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
         if "bite" in message.content:
@@ -687,24 +692,40 @@ async def on_message(message: discord.Message):
 
 @client.event
 async def on_raw_reaction_add(payload):
-    luxurefeed = await client.fetch_channel(1152700138540773437)
     if payload.channel_id == 1132379187227930664:
+        luxurefeed = await client.fetch_channel(1152700138540773437)
         channel=await client.fetch_channel(payload.channel_id)
         message=await channel.fetch_message(payload.message_id)
-        if message.reactions[0].count==2:
-            if message.attachments:
-                emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
-                emb.set_image(url=message.attachments[0].url)
-                emb.add_field(name="source:", value=message.jump_url)
-                send = await luxurefeed.send(embed=emb)
-                await send.create_thread(name=f"{message.author.name}'s feed")
-                await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=1000)
-                await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
-
+        print(message.reactions[0].emoji.id)
+        if message.reactions[0].count==4:
+            emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+            emb.set_image(url=message.attachments[0].url)
+            emb.add_field(name="source:", value=message.jump_url)
+            send = await luxurefeed.send(embed=emb)
+            await send.create_thread(name=f"{message.author.name}'s feed")
+            await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=1000)
+            await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
         else:
             return
     else:
         return
+
+@client.event
+async def on_raw_reaction_remove(payload):
+    luxurefeed = await client.fetch_channel(1152700138540773437)
+    if payload.channel_id == 1132379187227930664:
+        channel=await client.fetch_channel(payload.channel_id)
+        message=await channel.fetch_message(payload.message_id)
+        print(message.reactions[0].emoji.id)
+        if message.reactions[0].count == 1:
+            await message.delete()
+            await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=-1000)
+            await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
+        else:
+            return
+    else:
+        return
+
 
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
@@ -758,13 +779,14 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
-    for i in client.guilds:
-        bsemoji = await i.fetch_emoji(1138549194550952048)
-    # Récupère les rôles.
-        staffrole = discord.utils.get(i.roles, id=1130945537227632648)
-        botrole = discord.utils.get(i.roles, id=1130945537194078316)
-        devfrole = discord.utils.get(i.roles, id=1144410413069500548)
-        myList = ["Collection", 3, (botrole, devfrole, staffrole)]
-    # Ajoute les rôles à la liste des rôles ayant accès aux émojis.
+    guild = client.get_guild(guild_id)
+    for i in guild.roles:
+        bsemoji = await i.guild.fetch_emoji(1138549194550952048)
+    # get roles.
+        staffrole = guild.get_role(1130945537215053942)
+        botrole = guild.get_role(1130945537194078316)
+        devfrole = guild.get_role(1144410413069500548)
+        myList = [botrole, devfrole, staffrole]
+    # add roles to the list of roles who get access to emojis.
         await bsemoji.edit(roles=myList, reason="test")
 client.run(str(DISCORD_TOKEN))
