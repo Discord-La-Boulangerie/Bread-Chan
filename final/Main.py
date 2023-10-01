@@ -8,7 +8,7 @@ from typing import Optional
 import io
 from io import BytesIO
 import asyncio
-from collections import Counter
+from collections import *
 
 #Import de discord et modules discord
 import discord 
@@ -24,6 +24,7 @@ import brawlstats as brst
 import enkanetwork as enk
 from enkanetwork.model.stats import Stats
 import fortnite_api as ftn
+
 
 #paramètres
 
@@ -152,7 +153,7 @@ async def pingpong(interaction: discord.Interaction):
 async def botinfo(interaction: discord.Interaction):
     emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
     emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
-    emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI \nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
+    emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI : {bl} \nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
 
@@ -408,20 +409,19 @@ async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[
         if choix.value == "fn":
             await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
         if choix.value == "gi":
-            data = await enkaclient.fetch_user(uid)
-        try: 
-            data = await enkaclient.fetch_user(uid)
-        except enk.VaildateUIDError as vr:
-            emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
-            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
-            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-            await interaction.response.send_message(embed=emb, ephemeral=True)
-        else:
-            emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
-            emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
-            emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
-            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-            await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
+            try: 
+                data = await enkaclient.fetch_user(uid)
+            except enk.VaildateUIDError as vr:
+                emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
+                emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+                emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+                await interaction.response.send_message(embed=emb, ephemeral=True)
+            else:
+                emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
+                emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
+                emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
+                emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+                await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
         self.data = data
@@ -450,9 +450,6 @@ class DropdownView(discord.ui.View):
         self.data = data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
-
-        async def on_timeout():
-            self.clear_items
 #report system
 
 #def modal
@@ -464,7 +461,7 @@ class ReportModal(discord.ui.Modal, title="signalement"):
     
     async def on_submit(self, interaction: discord.Interaction):
         textinput = self.textinput
-        chat = await client.fetch_channel(int(1130945538406240405))
+        chat = await client.fetch_channel(1130945538406240405)
         emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = discord.Color.green(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
         emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
@@ -656,20 +653,17 @@ async def on_message(message: discord.Message):
             await message.channel.typing()
             await asyncio.sleep(2)
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
-        word1 = ["quoi", "quoi ?", "quoi?"]
-        for i in range(len(word1)):    #Check pour chaque combinaison
-            e = word1[i].casefold()
-            if message.content.endswith(e):  #Verifie si la combinaison est dans le message ET si x = 1
-                await message.channel.typing()
-                await message.reply("coubaka! UwU")
-                break
+        word1 = "quoi ?".casefold()
+        if message.content.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
+            await message.channel.typing()
+            await message.reply("coubaka! UwU")
         if message.content.startswith(client.user.mention):
             await message.channel.typing()
             await asyncio.sleep(3)
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
-        randcramptes1 = ["cramptés","cramptes","cramptés ?", "cramptés?"]
+        randcramptes1 = "cramptés?".casefold()
         for i in range(len(randcramptes1)):    #Check pour chaque combinaison
             randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
             if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
@@ -692,24 +686,28 @@ async def on_message(message: discord.Message):
 
 @client.event
 async def on_raw_reaction_add(payload):
+    luxurefeed = await client.fetch_channel(1152700138540773437)
+    channel=await client.fetch_channel(payload.channel_id)
+    message=await channel.fetch_message(payload.message_id)
     if payload.channel_id == 1132379187227930664:
-        luxurefeed = await client.fetch_channel(1152700138540773437)
-        channel=await client.fetch_channel(payload.channel_id)
-        message=await channel.fetch_message(payload.message_id)
         print(message.reactions[0].emoji.id)
-        if message.reactions[0].count==4:
-            emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
-            emb.set_image(url=message.attachments[0].url)
-            emb.add_field(name="source:", value=message.jump_url)
-            send = await luxurefeed.send(embed=emb)
-            await send.create_thread(name=f"{message.author.name}'s feed")
-            await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=1000)
-            await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
+        if payload.emoji_id == 1141354959372304384:
+            if message.reactions[0].count==4:
+                emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+                emb.set_image(url=message.attachments[0].url)
+                emb.add_field(name="source:", value=message.jump_url)
+                send = await luxurefeed.send(embed=emb)
+                await send.create_thread(name=f"{message.author.name}'s feed")
+                await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=1000, reason=f"envoi dans le Feed {luxurefeed.name}")
+                await message.author.send(f"[ton post](<{message.jump_url}>) a été envoyé dans le feed suivant : {luxurefeed.mention}. tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
+            else:
+                return
         else:
             return
-    else:
-        return
 
+
+
+1141354959372304384
 @client.event
 async def on_raw_reaction_remove(payload):
     luxurefeed = await client.fetch_channel(1152700138540773437)
@@ -717,7 +715,7 @@ async def on_raw_reaction_remove(payload):
         channel=await client.fetch_channel(payload.channel_id)
         message=await channel.fetch_message(payload.message_id)
         print(message.reactions[0].emoji.id)
-        if message.reactions[0].count == 1:
+        if message.reactions[0].count == 3:
             await message.delete()
             await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=-1000)
             await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
@@ -731,6 +729,8 @@ async def on_raw_reaction_remove(payload):
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
     game = [
+            "ce bg de Cyrger qui a payé pour mon hébergement",
+            "webstrator.com",
             "pas ma mère sur Pornhub !",
             "à quoi jouent les membres du serveur",
             "Chainsaw Man sur Crunchyroll",
@@ -786,7 +786,7 @@ async def on_ready():
         staffrole = guild.get_role(1130945537215053942)
         botrole = guild.get_role(1130945537194078316)
         devfrole = guild.get_role(1144410413069500548)
-        myList = [botrole, devfrole, staffrole]
+        myList = deque(staffrole, botrole, devfrole)
     # add roles to the list of roles who get access to emojis.
         await bsemoji.edit(roles=myList, reason="test")
 client.run(str(DISCORD_TOKEN))

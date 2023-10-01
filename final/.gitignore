@@ -3,3 +3,6 @@
 db
 dbtest.py
 Spotipy tests.py
+.html
+bltests.py
+jsontests.py
