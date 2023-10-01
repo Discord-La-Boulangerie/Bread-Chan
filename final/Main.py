@@ -479,11 +479,10 @@ class say(discord.ui.Modal, title="contenu du reply"):
     def __init__(self, msg):
         self.msg = msg
         super().__init__()
-    textinput = discord.ui.TextInput(label="texte",min_length=1)
-
+    textinput = discord.ui.TextInput(label="texte", min_length=1)
+    ping = bool(discord.ui.TextInput(label="Mention", placeholder="Oui ou Non", required=False))
     async def on_submit(self, interaction: discord.Interaction):
-
-        await self.msg.reply(self.textinput.value)
+        await self.msg.reply(self.textinput.value, mention_author=self.ping)
         await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
 
 @client.tree.context_menu(name="Say", guild=guild_id1)
@@ -664,8 +663,8 @@ async def on_message(message: discord.Message):
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
         randcramptes1 = "cramptés?".casefold()
+        randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
         for i in range(len(randcramptes1)):    #Check pour chaque combinaison
-            randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)"]
             if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
                 await message.channel.typing()
                 await message.reply(random.choice(randcramptes2))
@@ -676,13 +675,11 @@ async def on_message(message: discord.Message):
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
             await message.channel.send(content=f"résolution du lien Tiktok envoyé à l'origine par {message.author.display_name}[:]({vxTiktokResolver})")
             await message.delete()
-    if message.channel.id == 1130945537907114145:
-        if random.randint(1, 50) == 1:
-            if message.attachments:
-                await message.add_reaction("<:LBmeh:1131556048948449400>")
+    if message.channel.id == 1130945537907114145 and message.attachments:
+        if random.randint(1,50) == 1:
+            await message.add_reaction("<:LBmeh:1131556048948449400>")
         if random.randint(1, 50) == 2:
-            if message.attachments:
-                await message.add_reaction("♻")
+            await message.add_reaction("♻")
 
 @client.event
 async def on_raw_reaction_add(payload):
