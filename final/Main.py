@@ -692,8 +692,9 @@ async def on_raw_reaction_add(payload):
     if payload.channel_id == 1132379187227930664:
         print(message.reactions[0].emoji.id)
         if payload.emoji_id == 1141354959372304384:
-            if message.reactions[0].count==4:
-                emb = discord.Embed(title=f"<:Upvote:1141354962392199319> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+            if payload.emoji_id.count==3:
+                print(payload.emoji_id.count)
+                emb = discord.Embed(title=f"<:Downvote:1141354959372304384> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
                 emb.set_image(url=message.attachments[0].url)
                 emb.add_field(name="source:", value=message.jump_url)
                 send = await luxurefeed.send(embed=emb)
@@ -702,27 +703,16 @@ async def on_raw_reaction_add(payload):
                 await message.author.send(f"[ton post](<{message.jump_url}>) a été envoyé dans le feed suivant : {luxurefeed.mention}. tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
             else:
                 return
+        if payload.emoji_id == 1141354962392199319:
+            if payload.emoji_id.count < 3:
+                print(payload.emoji_id.count)
+                await payload.message.delete()
+                await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=-1000, reason=f"supression")
+                await message.author.send(f"ton post a été supprimé, tu as perdu 1000 <:LBmcbaguette:1140270591828570112>")
+            else:
+                return
         else:
             return
-
-
-
-1141354959372304384
-@client.event
-async def on_raw_reaction_remove(payload):
-    luxurefeed = await client.fetch_channel(1152700138540773437)
-    if payload.channel_id == 1132379187227930664:
-        channel=await client.fetch_channel(payload.channel_id)
-        message=await channel.fetch_message(payload.message_id)
-        print(message.reactions[0].emoji.id)
-        if message.reactions[0].count == 3:
-            await message.delete()
-            await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=-1000)
-            await message.author.send(f"ton post {message.jump_url} a été envoyé dans le feed suivant : {luxurefeed.jump_url}, tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
-        else:
-            return
-    else:
-        return
 
 
 #auto tasks
