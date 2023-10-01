@@ -479,10 +479,11 @@ class say(discord.ui.Modal, title="contenu du reply"):
     def __init__(self, msg):
         self.msg = msg
         super().__init__()
-    textinput = discord.ui.TextInput(label="texte", min_length=1)
-    ping = bool(discord.ui.TextInput(label="Mention", placeholder="Oui ou Non", required=False))
+    textinput = discord.ui.TextInput(label="Texte", min_length=1)
+    ping = discord.ui.TextInput(label="Mention", min_length=3, max_length=3, placeholder="Oui ou Non", required=True)
+    ping2 = bool(ping.value.lower().replace("oui", "True").replace("non", "False"))
     async def on_submit(self, interaction: discord.Interaction):
-        await self.msg.reply(self.textinput.value, mention_author=self.ping)
+        await self.msg.reply(self.textinput.value, mention_author=self.ping2)
         await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
 
 @client.tree.context_menu(name="Say", guild=guild_id1)
@@ -495,11 +496,7 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
 
 @client.event
 async def on_message_edit(before, after):
-    if before.author == client.user:
-        return
-    if before.author.bot == True:
-        return
-    if before.content == after.content:
+    if before.author.bot == True or before.author == client.user or before.content == after.content:
         return
     else:
         if before.guild.id ==1130945537181499542:
