@@ -8,6 +8,7 @@ from typing import Optional
 import io
 from io import BytesIO
 import asyncio
+import collections
 from collections import *
 
 #Import de discord et modules discord
@@ -522,9 +523,7 @@ async def on_message_edit(before, after):
 
 @client.event
 async def on_message_delete(message: discord.Message):
-    if message.author == client.user:
-        return
-    if message.author.bot == True:
+    if message.author == client.user or message.author.bot == True:
         return
     else:
         if message.guild.id == 1130945537181499542: # La Boulangerie
@@ -533,8 +532,8 @@ async def on_message_delete(message: discord.Message):
                 e = []
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
                 emb.add_field(name="chat:", value=message.channel.jump_url)
-                for i in message.attachments:
-                    e.append(emb.add_field(name=i.filename, value=i.url, inline=False))
+                for _ in message.attachments:
+                    e.append(emb.add_field(name=_.filename, value=_.url, inline=False))
                 await channel.send(embed=emb)
             else:
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
@@ -543,15 +542,12 @@ async def on_message_delete(message: discord.Message):
 
         if message.guild.id ==1130798906586959946: # BreadStudios Lab
             channel1 = await client.fetch_channel(1141995718228324482)
-            channel2 = await client.fetch_channel(1150055306676670585)
+            liste = []
             if message.attachments:
-                liste = []
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 for _ in message.attachments:
-                    e = await message.attachments[0].read()
-                    buffer = await channel2.send(file=discord.File(fp=e, filename=message.attachments[0].filename)) 
-                    liste.append(emb.add_field(name=f"{buffer.attachments[0].filename}", value=buffer.attachments[0].url, inline=False))
+                    liste.append(emb.add_field(name=f"{_.filename}", value=_.url, inline=False))
                 await channel1.send(embed=emb)
             else:
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
@@ -579,20 +575,25 @@ async def on_member_join(member: discord.Member):
 
 @client.event
 async def on_message(message: discord.Message):
+    luxurechannel = client.fetch_channel(1132379187227930664)
     if message.author.bot == True:
         return
+    
     if message.channel.id == 1134102319580069898:
         await message.create_thread(name=f"QOTD de {message.author.display_name}")
+
     if message.channel.id == 1130945537907114141:
         await message.create_thread(name=f"Annonce de {message.author.display_name}")
         await message.publish()
-    if message.channel.id == 1132379187227930664:
+
+    if message.channel == luxurechannel:
         if message.author.id == 601041630081974292:
             if message.attachments:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                 await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
+
             if not message.attachments:
                 word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
                 for i in range(len(word)):
@@ -601,16 +602,15 @@ async def on_message(message: discord.Message):
                         await message.create_thread(name=f"{message.author}")
                         for i in range(len(emojilist)):
                             await message.add_reaction(emojilist[i])
-
             else:
                 return
+
         if message.author.id == 911467405115535411:
             if message.attachments:
                 emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
                 await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
-
             else:
                 word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
                 for i in range(len(word)):
@@ -645,18 +645,22 @@ async def on_message(message: discord.Message):
 
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
     if not message.author.id == 911467405115535411:
-        if "bite" in message.content:
+        if message.content == "bite".casefold():
             await message.channel.typing()
             await asyncio.sleep(2)
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
-        word1 = "quoi ?".casefold()
-        if message.content.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
+        if "UwU" in message.content:
+            await message.add_reaction("<a:DiscoUwU:1158497203615187015>")
+        word1 = "quoi"
+        if message.content.endswith(word1.casefold()):  #Verifie si la combinaison est dans le message ET si x = 1
             await message.channel.typing()
             await message.reply("coubaka! UwU")
+
         if message.content.startswith(client.user.mention):
             await message.channel.typing()
             await asyncio.sleep(3)
             await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
+
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
         randcramptes1 = "cramptés?".casefold()
@@ -666,6 +670,7 @@ async def on_message(message: discord.Message):
                 await message.channel.typing()
                 await message.reply(random.choice(randcramptes2))
                 break
+            
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
@@ -685,10 +690,10 @@ async def on_raw_reaction_add(payload):
     message=await channel.fetch_message(payload.message_id)
     if payload.channel_id == 1132379187227930664:
         print(message.reactions[0].emoji.id)
-        if payload.emoji_id == 1141354959372304384:
-            if payload.emoji_id.count==3:
-                print(payload.emoji_id.count)
-                emb = discord.Embed(title=f"<:Downvote:1141354959372304384> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
+        if payload.emoji.id == 1141354962392199319:
+            if payload.emoji.count()==3:
+                print(payload.emoji.count())
+                emb = discord.Embed(title=f"<:Upvote:1141354959372304384> Feed", description=f"une image de {message.author.mention} a été envoyée dans le feed:")
                 emb.set_image(url=message.attachments[0].url)
                 emb.add_field(name="source:", value=message.jump_url)
                 send = await luxurefeed.send(embed=emb)
@@ -697,9 +702,10 @@ async def on_raw_reaction_add(payload):
                 await message.author.send(f"[ton post](<{message.jump_url}>) a été envoyé dans le feed suivant : {luxurefeed.mention}. tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
             else:
                 return
-        if payload.emoji_id == 1141354962392199319:
-            if payload.emoji_id.count < 3:
-                print(payload.emoji_id.count)
+
+        if payload.emoji.id == 1141354959372304384:
+            if payload.emoji.count() < 3:
+                print(payload.emoji.count())
                 await payload.message.delete()
                 await unbclient.edit_user_balance(guild_id=guild_id, user_id=message.author.id, cash=-1000, reason=f"supression")
                 await message.author.send(f"ton post a été supprimé, tu as perdu 1000 <:LBmcbaguette:1140270591828570112>")
@@ -708,11 +714,14 @@ async def on_raw_reaction_add(payload):
         else:
             return
 
-
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
     game = [
+            "Apple en train de chialer",
+            "Lilo et Nightye sur Smash",
+            "Amouranth, mais pas sur Twitch",
+            "Amouranth dire que JDG ressemble à un ananas",
             "ce bg de Cyrger qui a payé pour mon hébergement",
             "webstrator.com",
             "pas ma mère sur Pornhub !",
@@ -753,7 +762,7 @@ async def changepresence():
             "le journal de la Boulangerie",
             "Nightye qui a retrouvé le trophée 1m de Wankil",        
         ]
-    activity = discord.Activity(type = discord.ActivityType.watching, name=f"{game[random.randint(1, len(game)-1)]}")
+    activity = discord.Activity(type = discord.ActivityType.watching, name=random.choice(game))
     await client.change_presence(activity=activity, status=discord.Status.online)
 
 #login check + bot login events
@@ -763,14 +772,35 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
-    guild = client.get_guild(guild_id)
-    for i in guild.roles:
-        bsemoji = await i.guild.fetch_emoji(1138549194550952048)
-    # get roles.
-        staffrole = guild.get_role(1130945537215053942)
-        botrole = guild.get_role(1130945537194078316)
-        devfrole = guild.get_role(1144410413069500548)
-        myList = deque(staffrole, botrole, devfrole)
-    # add roles to the list of roles who get access to emojis.
-        await bsemoji.edit(roles=myList, reason="test")
+    # guildID correspond à l'ID du serveur où se trouve l'émoji.
+    try:
+        guild = await client.fetch_guild(guild_id)
+
+        # Récupère l'émoji.
+        # emojiID correspond à l'ID de l'émoji en question.
+        bsemoji = await guild.fetch_emoji(1138549194550952048)
+        fnemoji = await guild.fetch_emoji(1136241241781186632)
+        valoemoji = await guild.fetch_emoji(1136233292899819532)
+        csemoji = await guild.fetch_emoji(1136234211976695888)
+        arkemoji = await guild.fetch_emoji(1136229377399603210)
+        hoyoemoji = await guild.fetch_emoji(1139089457086210118)
+        mcemoji = await guild.fetch_emoji(1136229172935659640)
+        terremoji = await guild.fetch_emoji(1136234618417328218)
+        pokemoji = await guild.fetch_emoji(1136232472418455622)
+        doomemoji = await guild.fetch_emoji(1136241845899374722)
+        reemoji = await guild.fetch_emoji(1136236032455606364)
+        subnemoji = await guild.fetch_emoji(1136232168402735234)
+        eremoji = await guild.fetch_emoji(1136247065291268147)
+        emojilist = [bsemoji, fnemoji, valoemoji, csemoji, arkemoji, hoyoemoji, mcemoji, terremoji, pokemoji, doomemoji, reemoji, subnemoji, eremoji]
+        # Récupère le rôle.
+        # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
+        devrole = 1130945537181499543
+        botrole = 1130945537194078316
+        # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
+        roles = [devrole, botrole]
+        for i in emojilist:
+            await i.edit(roles=roles)
+    except Exception as e:
+        print(e)
+
 client.run(str(DISCORD_TOKEN))

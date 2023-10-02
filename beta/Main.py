@@ -47,6 +47,7 @@ async def identify(self):
     _log.info('Shard ID %s has sent the IDENTIFY payload.', self.shard_id)
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
+guild_id1 = 1130798906586959946
 guild_id = discord.Object(id=1130798906586959946)
 # client def
 class MyClient(discord.Client):
@@ -254,4 +255,20 @@ async def on_ready():
     print("="*10 + "| Build Infos |" + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.releaselevel}")
+    # guildID correspond à l'ID du serveur où se trouve l'émoji.
+    try:
+        guild = await client.fetch_guild(guild_id1)
+
+        # Récupère l'émoji.
+        # emojiID correspond à l'ID de l'émoji en question.
+        emoji = await guild.fetch_emoji(1141354962392199319)
+
+        # Récupère le rôle.
+        # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
+        rolestaff = guild.get_role(1134155496580989009)
+        rolequasi = guild.get_role(1134154030009028750)
+        # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
+        await emoji.edit(roles=[rolestaff, rolequasi])
+    except Exception as e:
+        print(e)
 client.run(DISCORD_TOKEN)  # type: ignore
