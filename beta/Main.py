@@ -268,7 +268,7 @@ async def on_ready():
         rolestaff = guild.get_role(1134155496580989009)
         rolequasi = guild.get_role(1134154030009028750)
         # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
-        await emoji.edit(roles=[rolestaff, rolequasi])
+        await emoji.edit(roles=[])
     except Exception as e:
         print(e)
 client.run(DISCORD_TOKEN)  # type: ignore
