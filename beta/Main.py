@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from typing import Optional
 from discord.gateway import DiscordWebSocket, _log
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+import enkanetwork as enk
+import aiohttp
 #paramètres
 
 #mobile status
@@ -49,6 +51,8 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
 guild_id1 = 1130798906586959946
 guild_id = discord.Object(id=1130798906586959946)
+enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
+global uidvar
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -234,13 +238,13 @@ async def on_message(msg: discord.Message):
         "salut",
         "hey",]
     for i in range(len(word1)):    #Check pour chaque combinaison
-        if msg.content.startswith(f"<@{client.user.id}> {word1[i]}"): #type: ignore
+        if msg.content.startswith(f"{client.user.mention} {word1[i]}"):
             rand = [
                 "entry1",
                 "entry2",
                 "entry3",
                 ]
-            await msg.reply(rand[random.randint(0, 3)])
+            await msg.reply(random.choice(rand))
     
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
@@ -249,26 +253,28 @@ async def on_message(msg: discord.Message):
             await msg.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
 
 
+async def enk_autocomplete(interaction: discord.Interaction, current: str):
+    enklist = []
+
+    data = await enkaclient.fetch_user_by_uid("746264242")
+    for i in data.characters:
+        enklist.append(f"{i.name}({i.id})")
+    return [
+        app_commands.Choice(name=char, value=char)
+        for char in enklist
+    ]
+
+@client.tree.command(name="autocomplete_test", guild=guild_id)
+@app_commands.autocomplete(uid=enk_autocomplete)
+async def enkatests(interaction: discord.Interaction, uid: int, character: str):
+
+    await interaction.response.send_message(f'Your favourite fruit seems to be {character}')
+
+
 #login check + bot login events
 @client.event
 async def on_ready():
     print("="*10 + "| Build Infos |" + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.releaselevel}")
-    # guildID correspond à l'ID du serveur où se trouve l'émoji.
-    try:
-        guild = await client.fetch_guild(guild_id1)
-
-        # Récupère l'émoji.
-        # emojiID correspond à l'ID de l'émoji en question.
-        emoji = await guild.fetch_emoji(1141354962392199319)
-
-        # Récupère le rôle.
-        # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
-        rolestaff = guild.get_role(1134155496580989009)
-        rolequasi = guild.get_role(1134154030009028750)
-        # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
-        await emoji.edit(roles=[])
-    except Exception as e:
-        print(e)
 client.run(DISCORD_TOKEN)  # type: ignore

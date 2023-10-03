@@ -9,13 +9,13 @@ import io
 from io import BytesIO
 import asyncio
 import collections
-from collections import *
+from collections import * #type: ignore
 
 #Import de discord et modules discord
 import discord 
-from discord import app_commands
-from discord.ext import tasks
 import discord.ext.commands
+from discord import app_commands, Team
+from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
 
@@ -108,6 +108,7 @@ blclient = bl.BlaguesAPI(token=str(BLAGUES_TOKEN))
 
 ##commands
 #ping
+@app_commands.guild_only()
 @client.tree.command(name="cash", description="[FUN] indique combien d'argent en cash possède l'utilisateur", guild=guild_id1)
 async def unbcash(interaction: discord.Interaction, user: Optional[discord.Member]):
     if user == None:
@@ -118,6 +119,7 @@ async def unbcash(interaction: discord.Interaction, user: Optional[discord.Membe
         await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.cash} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
         await unbclient.close_session()
 
+@app_commands.guild_only()
 @client.tree.command(name="bank", description="[FUN] indique combien d'argent en banque possède l'utilisateur", guild=guild_id1)
 async def unbbank(interaction: discord.Interaction, user: Optional[discord.Member]):
     if user == None:
@@ -128,6 +130,7 @@ async def unbbank(interaction: discord.Interaction, user: Optional[discord.Membe
         await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
         await unbclient.close_session()
 
+@app_commands.guild_only()
 @client.tree.command(name="leaderboard", description="[FUN] indique le classement global du serveur", guild=guild_id1)
 async def leaderboard(interaction: discord.Interaction):
     guild_leaderboard = await unbclient.get_guild_leaderboard(guild_id)
@@ -152,15 +155,17 @@ async def pingpong(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
-@client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot", guild=guild_id1)
+@client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot")
 async def botinfo(interaction: discord.Interaction):
     emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
     emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
-    emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI : {bl} \nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
+    emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI : ?\nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
+    emb.add_field(name=discord.AppInfo(state=client, data=App), value=Team.members)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
 
 #staff app system
+@app_commands.guild_only()
 @client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.", guild=guild_id1)
 async def staff_app(interaction: discord.Interaction, file: Optional[discord.Attachment]):
     e = file
@@ -190,6 +195,7 @@ class staff(discord.ui.Modal):
             await staffmsg.add_reaction(emojilist[i])
 
 #sendrule
+@app_commands.guild_only()
 @client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
@@ -216,26 +222,28 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
     else:
         await interaction.response.send_message("rock! :rock:", ephemeral=True)
 
+
 @client.tree.context_menu(name="Profil", guild=guild_id1)
+@app_commands.guild_only()
 @app_commands.rename(user="Membre")
 async def profil(interaction: discord.Interaction, user: discord.Member):
 # Remove unnecessary characters
-    badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
+    badges_class = 0
 
+    if not user.public_flags.all() == None:
+        badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
+    if user.public_flags.all() == None:
+        badges_class = "Aucun Badges détecté"
     # Output
-
-#NEW
-    emb = discord.Embed(
-    title=f"Profil de {user.display_name}",
-    color=user.color,
-    timestamp= datetime.datetime.now()   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
-    )
-    emb.add_field(name="Date de création du compte :", value=f"le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}")
+    emb = discord.Embed(title=f"Profil de {user.display_name}", color=user.color, timestamp=datetime.datetime.now())   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
+    emb.add_field(name="Date de création du compte :", value=f"le {discord.utils.format_dt(user.joined_at)}")
     emb.add_field(name="Badges :", value=badges_class)
-
     emb.set_thumbnail(url= f"{user.display_avatar}")   #Pour ajouter la pp du type
     emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
     await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
+
+
+
 class SimpleView(discord.ui.View):
     def __init__(self, user, url):
         super().__init__()
@@ -246,7 +254,9 @@ class SimpleView(discord.ui.View):
         self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
 
 #sanctions system
+
 @client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@app_commands.guild_only()
 @app_commands.rename(member="membre")
 @app_commands.describe(member="l'utilisateur à ban")
 @app_commands.rename(reason="raison")
@@ -374,22 +384,20 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await interaction.response.send_message(content=f"webhook en cours d'envoi dans {interaction.channel}...", ephemeral=True)
             await asyncio.sleep(2)
             await webhookcreate.send(texte)
-            edit = await interaction.original_response()
-            await edit.edit(content="webhook envoyé!") 
+            editable = await interaction.original_response()
+            await editable.edit(content="webhook envoyé!") 
             await asyncio.sleep(5)
             await webhookcreate.delete()
-            await edit.delete()
         if not file == None:
             pdp = await file.read()
             webhookcreate = await channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
             await interaction.response.send_message(content=f"webhook en cours d'envoi dans {channel}...", ephemeral=True)
             await asyncio.sleep(2)
             await webhookcreate.send(texte)
-            edit = await interaction.original_response()
-            await edit.edit(content="webhook envoyé!") 
+            editable = await interaction.original_response()
+            await editable.edit(content="webhook envoyé!") 
             await asyncio.sleep(5)
             await webhookcreate.delete()
-            await edit.delete()
 
 @client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
 @app_commands.default_permissions(manage_guild=True)
@@ -397,6 +405,8 @@ async def sync(interaction: discord.Interaction):
     await client.tree.sync(guild=guild_id1)
     await client.tree.sync()
     await interaction.response.send_message("le tree a été correctement synchronisé !", ephemeral=True)
+    await asyncio.sleep(2)
+    await interaction.delete_original_response()
 
 @client.tree.command(name="game_info", description="[BETA] permet d'obtenir des infos sur un compte de jeu", guild=guild_id1)
 @app_commands.choices(choix=[
@@ -425,13 +435,15 @@ async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[
                 emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
                 emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
                 await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
+
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
         self.data = data
-        # Set the options that will be presented inside the dropdown
+        
+        # définis les options qui seront affichées dans le dropdown
         options=[]
         for char in self.data.characters:
-            self.char= char
+            self.char = char
             options.append(discord.SelectOption(label=char.name, description=f"le build de {char.name}", value=char.name.lower())) # add dropdown option for each character in data.character
             super().__init__(placeholder="Sélectionne le build que tu souhaite regarder :", min_values=1, max_values=1, options=options)
         # The placeholder is what will be shown when no option is chosen 
@@ -442,7 +454,7 @@ class Dropdown(discord.ui.Select):
         # the user's favourite colour or choice. The self object refers to the
         # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-        emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0].title()}", description=f"Voici les informations du personnage:\n\ncrit rate: {NotImplemented}", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0].title()}", description=f"Voici les informations du personnage:\n\ncrit rate: {self.char}", color = discord.Color.green(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
         emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
         await interaction.response.send_message(f"Voici le build de {self.values[0].title()}:", ephemeral=True, embed=emb)
@@ -536,13 +548,13 @@ async def on_message_delete(message: discord.Message):
             channel = await client.fetch_channel(1131864743502696588)
             if message.attachments:
                 e = []
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n```{message.content}```", color=discord.Color.brand_red(), type="image")
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 for _ in message.attachments:
                     e.append(emb.add_field(name=_.filename, value=_.url, inline=False))
                 await channel.send(embed=emb)
             else:
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n```{message.content}```", color=discord.Color.brand_red())
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 await channel.send(embed=emb)
 
@@ -550,13 +562,13 @@ async def on_message_delete(message: discord.Message):
             channel1 = await client.fetch_channel(1141995718228324482)
             liste = []
             if message.attachments:
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red(), type="image")
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n```{message.content}```", color=discord.Color.brand_red(), type="image")
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 for _ in message.attachments:
                     liste.append(emb.add_field(name=f"{_.filename}", value=_.url, inline=False))
                 await channel1.send(embed=emb)
             else:
-                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n{message.content}", color=discord.Color.brand_red())
+                emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n```{message.content}```", color=discord.Color.brand_red())
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 await channel1.send(embed=emb)
 
@@ -566,7 +578,6 @@ async def on_member_join(member: discord.Member):
     emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
     emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
     emb.set_footer(text=client.user, icon_url=client.user.avatar)
-    emb.add_field(name="", value="")
     channel = client.get_channel(1130945537907114139)
     msg = await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
     await msg.add_reaction("<:LBgigachad:1134177726585122857>")
@@ -649,8 +660,9 @@ async def on_message(message: discord.Message):
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
         if "UwU" in message.content:
             await message.add_reaction("<a:DiscoUwU:1158497203615187015>")
+
         word1 = "quoi"
-        if message.content.endswith(word1.casefold()):  #Verifie si la combinaison est dans le message ET si x = 1
+        if message.content.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
             await message.channel.typing()
             await message.reply("coubaka! UwU")
 
@@ -675,18 +687,20 @@ async def on_message(message: discord.Message):
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
             await message.channel.send(content=f"résolution du lien Tiktok envoyé à l'origine par {message.author.display_name}[:]({vxTiktokResolver})")
             await message.delete()
+    
     if message.channel.id == 1130945537907114145 and message.attachments:
         emojilist = ["<:LBmeh:1131556048948449400>", "♻"]
         if random.randint(1, 50) == 1:
             await message.add_reaction(random.choice(emojilist))
 
 @client.event
-async def on_reaction_add(reaction: discord.Reaction):
-    luxurefeed = await client.fetch_channel(1152700138540773437)
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     print(reaction.count)
     if reaction.emoji == "<:Upvote:1141354959372304384>":
+        luxurefeed = await client.fetch_channel(1152700138540773437)
         total_votes = reaction.count
         if total_votes <= 3:
+            print(reaction.message.author.mention, reaction.message.jump_url, reaction.message.attachments[0].url)
             emb = discord.Embed(title=f"<:Upvote:1141354959372304384> Feed", description=f"une image de {reaction.message.author.mention} a été envoyée dans le feed:")
             emb.set_image(url=reaction.message.attachments[0].url)
             emb.add_field(name="source:", value=reaction.message.jump_url)
@@ -694,7 +708,39 @@ async def on_reaction_add(reaction: discord.Reaction):
                 send = await luxurefeed.send(embed=emb)
                 await send.create_thread(name=f"{reaction.message.author.name}'s feed")
                 await unbclient.edit_user_balance(guild_id=guild_id, user_id=reaction.message.author.id, cash=1000, reason=f"envoi dans le Feed {luxurefeed.name}")
+                print(reaction.message.author.name)
                 await reaction.message.author.send(f"[ton post](<{reaction.message.jump_url}>) a été envoyé dans le feed suivant : {luxurefeed.mention}. tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
+            except Exception as exc:
+                print(exc)
+            
+        else:
+            return
+
+    if reaction.emoji == "<:Downvote:1141354959372304384>":
+        total_votes = reaction.count
+        if total_votes <= 3:
+            print(reaction.message.author.mention, reaction.message.jump_url, reaction.message.attachments[0].url)
+            try:
+                await reaction.message.delete()
+                await unbclient.edit_user_balance(guild_id=guild_id, user_id=reaction.message.author.id, cash=-1000, reason=f"supression")
+                print(reaction.message.author.name)
+                await reaction.message.author.send(f"ton post a été supprimé, tu as perdu 1000 <:LBmcbaguette:1140270591828570112>")
+            except Exception as exc:
+                print(exc)
+
+    print(reaction.count)
+    if reaction.emoji == "<:Upvote:1141354959372304384>":
+        imgfeed = await client.fetch_channel(1152948287154966598)
+        total_votes = reaction.count
+        if total_votes <= 3:
+            emb = discord.Embed(title=f"<:Upvote:1141354959372304384> Feed", description=f"une image de {reaction.message.author.mention} a été envoyée dans le feed:")
+            emb.set_image(url=reaction.message.attachments[0].url)
+            emb.add_field(name="source:", value=reaction.message.jump_url)
+            try:
+                send = await imgfeed.send(embed=emb)
+                await send.create_thread(name=f"{reaction.message.author.name}'s feed")
+                await unbclient.edit_user_balance(guild_id=guild_id, user_id=reaction.message.author.id, cash=1000, reason=f"envoi dans le Feed {imgfeed.name}")
+                await reaction.message.author.send(f"[ton post](<{reaction.message.jump_url}>) a été envoyé dans le feed suivant : {imgfeed.mention}. tu as gagné 1000 <:LBmcbaguette:1140270591828570112>")
             except Exception as exc:
                 print(exc)
             
@@ -712,9 +758,11 @@ async def on_reaction_add(reaction: discord.Reaction):
                 print(exc)
     else:
         return
+
 @client.event
 async def on_reaction_remove(reaction: discord.Reaction):
     return
+
 #auto tasks
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
