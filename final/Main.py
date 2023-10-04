@@ -762,7 +762,7 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
         return
 
 @client.event
-async def on_reaction_remove(reaction: discord.Reaction):
+async def on_reaction_remove(reaction: discord.Reaction, user: discord.User):
     return
 
 #auto tasks
