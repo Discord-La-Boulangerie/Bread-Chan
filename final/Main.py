@@ -215,28 +215,35 @@ async def sendrule(interaction: discord.Interaction):
     app_commands.Choice(name="Scissors", value="scissors"),
     ])
 async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str]):
-    if (choix.value == 'rock'):
-        await interaction.response.send_message("paper! :scroll:", ephemeral=True) 
-    elif (choix.value == 'paper'):
-        await interaction.response.send_message("scissors! :scissors:", ephemeral=True)
-    else:
-        await interaction.response.send_message("rock! :rock:", ephemeral=True)
-
+    rpslist = ["Rock", "Paper", "Scissors"]
+    e = random.choice(rpslist)
+    e = e.replace("Rock","Rock ✊").replace("Paper","Paper 🤚").replace("Scissors","Scissors ✂")
+    await interaction.response.send_message(content=f"{e}")
+    await asyncio.sleep(2)
+    if choix.name == e:
+        await interaction.edit_original_response(content=f"{e}\n\négalité!")
+    if choix.name == "Scissors" and e == "Paper":
+        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
+    if choix.name == "Paper" and e == "Rock":
+        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
+    if choix.name == "Rock" and e == "Scissors":
+        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
+    if choix.name == "Paper" and e == "Scissors":
+        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
+    if choix.name == "Rock" and e == "Paper":
+        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
+    if choix.name == "Scissors" and e == "Rock":
+        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
 
 @client.tree.context_menu(name="Profil", guild=guild_id1)
 @app_commands.guild_only()
 @app_commands.rename(user="Membre")
 async def profil(interaction: discord.Interaction, user: discord.Member):
-# Remove unnecessary characters
-    badges_class = 0
-
-    if not user.public_flags.all() == None:
-        badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
-    if user.public_flags.all() == None:
-        badges_class = "Aucun Badges détecté"
+    # Remove unnecessary characters
+    badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
     # Output
     emb = discord.Embed(title=f"Profil de {user.display_name}", color=user.color, timestamp=datetime.datetime.now())   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
-    emb.add_field(name="Date de création du compte :", value=f"le {discord.utils.format_dt(user.joined_at)}")
+    emb.add_field(name="Date de création du compte :", value=f"le {discord.utils.format_dt(user.created_at)}")
     emb.add_field(name="Badges :", value=badges_class)
     emb.set_thumbnail(url= f"{user.display_avatar}")   #Pour ajouter la pp du type
     emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
@@ -290,29 +297,31 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
 @app_commands.default_permissions(moderate_members=True)
 async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason:Optional[str], file: Optional[discord.Attachment]):
     channel = await client.fetch_channel(1131864743502696588)
-    if not interaction.user.id == member.id:  
+    if not interaction.user.id == member.id:
         if interaction.user.top_role.position <= member.top_role.position: #type: ignore
-            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
+            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal à ton rôle le plus haut.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
             await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
         else:
             if reason == None:
-                await member.timeout(datetime.timedelta(seconds=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
+                await member.timeout(datetime.timedelta(minutes=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
                 await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes", ephemeral=True)
                 emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
-                emb.set_field_at(index=1, name="preuve de la raison du mute", value=file)
+                if file!= None:
+                    emb.add_field(name="preuve de la raison du mute", value=file)
                 await channel.send(embed=emb) #type: ignore
             else:
-                await member.timeout(datetime.timedelta(seconds=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
+                await member.timeout(datetime.timedelta(seconds=float(duration)), reason=reason)
                 await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
                 emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
-                emb.set_field_at(index=1, name="preuve de la raison du mute", value=file)
+                if file!= None:
+                    emb.add_field(name="preuve de la raison du mute", value=file)
                 await channel.send(embed=emb) #type: ignore
     
     if interaction.user.id == member.id:
         await interaction.response.send_message("wtf t'as vraiment pas d'amour propre pour essayer de te mute toi-même ou ca se passe comment ?", ephemeral=True)
     else :
-        if interaction.user.id == interaction.guild.owner_id : #type: ignore:
-            await member.timeout(datetime.timedelta(seconds=float(duration)))
+        if interaction.user.id == interaction.guild.owner_id : #type: ignore
+            await member.timeout(datetime.timedelta(minutes=float(duration)))
             await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
             emb = discord.Embed(title="Sanction", description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
             emb.set_image(url=file)
