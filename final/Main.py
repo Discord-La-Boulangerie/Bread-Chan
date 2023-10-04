@@ -653,10 +653,11 @@ async def on_message(message: discord.Message):
                 await message.create_thread(name=f"{message.author}")
                 for i in range(len(emojilist)):
                     await message.add_reaction(emojilist[i])
-
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
-    if not message.author.id == 911467405115535411:
-        if message.content == "bite".casefold():
+
+    if not message.author.id == 911467405115535411: # fonction qui m'immunise de ces conneries
+        e = message.content.casefold()
+        if " bite" in e:
             await message.channel.typing()
             await asyncio.sleep(2)
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
@@ -664,7 +665,7 @@ async def on_message(message: discord.Message):
             await message.add_reaction("<a:DiscoUwU:1158497203615187015>")
 
         word1 = "quoi"
-        if message.content.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
+        if e.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
             await message.channel.typing()
             await message.reply("coubaka! UwU")
 
@@ -682,6 +683,8 @@ async def on_message(message: discord.Message):
                 await message.channel.typing()
                 await message.reply(random.choice(randcramptes2))
                 break
+        if ":moyai:" in message.content:
+            await message.reply("https://canary.discord.com/store/skus/1037148024792690708/moai")
             
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
