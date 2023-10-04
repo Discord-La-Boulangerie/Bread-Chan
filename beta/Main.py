@@ -83,6 +83,7 @@ discord_blue = discord.Color.from_rgb(84, 102, 244)
 DiscordWebSocket.identify = identify
 ##commands
 #ping
+
 @client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
     botlink = f"https://discordapp.com/users/{client.user.id}" #type: ignore
@@ -265,10 +266,10 @@ async def enk_autocomplete(interaction: discord.Interaction, current: str):
     ]
 
 @client.tree.command(name="autocomplete_test", guild=guild_id)
-@app_commands.autocomplete(uid=enk_autocomplete)
+@app_commands.autocomplete(uid=enk_autocomplete, character=enk_autocomplete)
 async def enkatests(interaction: discord.Interaction, uid: int, character: str):
 
-    await interaction.response.send_message(f'Your favourite fruit seems to be {character}')
+    await interaction.response.send_message(f'Your favourite fruit seems to be {character}', ephemeral=True)
 
 
 #login check + bot login events

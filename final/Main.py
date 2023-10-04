@@ -190,7 +190,7 @@ class staff(discord.ui.Modal):
             await staffmsg.add_reaction(emojilist[i])
 
 #sendrule
-@client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@client.tree.command(name="sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
     channel=client.get_channel(1130945537907114137)
