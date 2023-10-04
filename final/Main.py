@@ -108,7 +108,6 @@ blclient = bl.BlaguesAPI(token=str(BLAGUES_TOKEN))
 
 ##commands
 #ping
-@app_commands.guild_only()
 @client.tree.command(name="cash", description="[FUN] indique combien d'argent en cash possède l'utilisateur", guild=guild_id1)
 async def unbcash(interaction: discord.Interaction, user: Optional[discord.Member]):
     if user == None:
@@ -119,7 +118,6 @@ async def unbcash(interaction: discord.Interaction, user: Optional[discord.Membe
         await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.cash} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
         await unbclient.close_session()
 
-@app_commands.guild_only()
 @client.tree.command(name="bank", description="[FUN] indique combien d'argent en banque possède l'utilisateur", guild=guild_id1)
 async def unbbank(interaction: discord.Interaction, user: Optional[discord.Member]):
     if user == None:
@@ -130,7 +128,6 @@ async def unbbank(interaction: discord.Interaction, user: Optional[discord.Membe
         await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
         await unbclient.close_session()
 
-@app_commands.guild_only()
 @client.tree.command(name="leaderboard", description="[FUN] indique le classement global du serveur", guild=guild_id1)
 async def leaderboard(interaction: discord.Interaction):
     guild_leaderboard = await unbclient.get_guild_leaderboard(guild_id)
@@ -160,13 +157,11 @@ async def botinfo(interaction: discord.Interaction):
     emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
     emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
     emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI : ?\nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
-    emb.add_field(name=discord.AppInfo(state=client, data=App), value=Team.members)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
 
 #staff app system
-@app_commands.guild_only()
-@client.tree.command(name = "staff_app", description = "[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.", guild=guild_id1)
+@client.tree.command(name="staff_app", description="[MODERATION] postuler dans la modération, grâce à cette commande, c'est facile.", guild=guild_id1)
 async def staff_app(interaction: discord.Interaction, file: Optional[discord.Attachment]):
     e = file
     await interaction.response.send_modal(staff(e))
@@ -195,7 +190,6 @@ class staff(discord.ui.Modal):
             await staffmsg.add_reaction(emojilist[i])
 
 #sendrule
-@app_commands.guild_only()
 @client.tree.command(name = "sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
@@ -208,7 +202,7 @@ async def sendrule(interaction: discord.Interaction):
     await interaction.response.send_message("envoyé!", ephemeral=True)
 
 #rps
-@client.tree.command(name="rps", description="[FUN][BETA] Shi-Fu-Mi")
+@client.tree.command(name="rps", description="[FUN] Shi-Fu-Mi")
 @app_commands.choices(choix=[
     app_commands.Choice(name="Rock", value="rock"),
     app_commands.Choice(name="Paper", value="paper"),
@@ -263,7 +257,6 @@ class SimpleView(discord.ui.View):
 #sanctions system
 
 @client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
-@app_commands.guild_only()
 @app_commands.rename(member="membre")
 @app_commands.describe(member="l'utilisateur à ban")
 @app_commands.rename(reason="raison")
@@ -818,7 +811,8 @@ async def changepresence():
             "Chuislay en train de répendre la sainte baguette",
             "mec, je me transforme en sexbot!",
             "le journal de la Boulangerie",
-            "Nightye qui a retrouvé le trophée 1m de Wankil",        
+            "Nightye qui a retrouvé le trophée 1m de Wankil",
+            "Sora réduire Apple en esclavage",
         ]
     activity = discord.Activity(type = discord.ActivityType.watching, name=random.choice(game))
     await client.change_presence(activity=activity, status=discord.Status.online)
