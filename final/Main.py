@@ -657,10 +657,12 @@ async def on_message(message: discord.Message):
 
     if not message.author.id == 911467405115535411: # fonction qui m'immunise de ces conneries
         e = message.content.casefold()
+
         if " bite" in e:
             await message.channel.typing()
             await asyncio.sleep(2)
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
+
         if "UwU" in message.content:
             await message.add_reaction("<a:DiscoUwU:1158497203615187015>")
 
