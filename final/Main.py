@@ -789,9 +789,9 @@ from instapy import InstaPy
 session = InstaPy(username="boulangerie_official", password=INSTA_password)
 
 # Fonction pour envoyer un message dans #insta
-async def send_discord_message(channel_id, message):
+async def send_discord_message(channel_id, message, embed=None):
     channel = client.get_channel(channel_id)
-    await channel.send(message)
+    await channel.send(content=message, embed=embed)
 
 # Fonction de rappel pour détecter les nouveaux posts
 def on_new_post(username, post):
