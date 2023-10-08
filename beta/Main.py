@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from typing import Optional
 from discord.gateway import DiscordWebSocket, _log
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+import enkanetwork as enk
+import aiohttp
 #paramètres
 
 #mobile status
@@ -47,7 +49,10 @@ async def identify(self):
     _log.info('Shard ID %s has sent the IDENTIFY payload.', self.shard_id)
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
+guild_id1 = 1130798906586959946
 guild_id = discord.Object(id=1130798906586959946)
+enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
+global uidvar
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -78,6 +83,7 @@ discord_blue = discord.Color.from_rgb(84, 102, 244)
 DiscordWebSocket.identify = identify
 ##commands
 #ping
+
 @client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
     botlink = f"https://discordapp.com/users/{client.user.id}" #type: ignore
@@ -233,19 +239,37 @@ async def on_message(msg: discord.Message):
         "salut",
         "hey",]
     for i in range(len(word1)):    #Check pour chaque combinaison
-        if msg.content.startswith(f"<@{client.user.id}> {word1[i]}"): #type: ignore
+        if msg.content.startswith(f"{client.user.mention} {word1[i]}"):
             rand = [
                 "entry1",
                 "entry2",
                 "entry3",
                 ]
-            await msg.reply(rand[random.randint(0, 3)])
+            await msg.reply(random.choice(rand))
     
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in msg.content:
             vxTiktokResolver = str(msg.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
             await msg.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
+
+
+async def enk_autocomplete(interaction: discord.Interaction, current: str):
+    enklist = []
+
+    data = await enkaclient.fetch_user_by_uid("746264242")
+    for i in data.characters:
+        enklist.append(f"{i.name}({i.id})")
+    return [
+        app_commands.Choice(name=char, value=char)
+        for char in enklist
+    ]
+
+@client.tree.command(name="autocomplete_test", guild=guild_id)
+@app_commands.autocomplete(uid=enk_autocomplete, character=enk_autocomplete)
+async def enkatests(interaction: discord.Interaction, uid: int, character: str):
+
+    await interaction.response.send_message(f'Your favourite fruit seems to be {character}', ephemeral=True)
 
 
 #login check + bot login events
