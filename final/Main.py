@@ -71,6 +71,7 @@ BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
 UNB_TOKEN = os.getenv("unbelivaboat_api_token")
+INSTA_password = ""
 enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
 # client def
 class MyClient(discord.Client):
@@ -725,6 +726,26 @@ async def on_raw_reaction_remove(payload):
             return
     else:
         return
+
+from instapy import InstaPy
+
+# Configuration d'InstaPy
+session = InstaPy(username="boulangerie_official", password=INSTA_password)
+
+# Fonction pour envoyer un message dans #insta
+async def send_discord_message(channel_id, message):
+    channel = client.get_channel(channel_id)
+    await channel.send(message)
+
+# Fonction de rappel pour détecter les nouveaux posts
+def on_new_post(username, post):
+    embed = discord.Embed(title="Nouveau Post", description=f"Nouveau post de {username} : {post} <:LBgigachad:1134177726585122857>\nOubliez pas de lacher votre meilleur like et de vous abo si c'est pas déjà fait!!!")
+    client.loop.create_task(send_discord_message(1160615720841912500, "<@1160616982098497627>", embed=embed))
+
+# Insta
+session.follow_by_users(["boulangerie_official"], amount=1, interact=False)
+session.set_callback(on_new_post)
+session.start()
 
 
 #auto tasks
