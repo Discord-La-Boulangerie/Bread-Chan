@@ -6,3 +6,5 @@ Spotipy tests.py
 .html
 bltests.py
 jsontests.py
+fntests.py
+r34tests.py
