@@ -6,5 +6,10 @@ Spotipy tests.py
 .html
 bltests.py
 jsontests.py
+<<<<<<< Updated upstream
 fntests.py
 r34tests.py
+=======
+r34tests.py
+fntests.py
+>>>>>>> Stashed changes

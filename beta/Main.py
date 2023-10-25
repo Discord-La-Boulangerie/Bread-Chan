@@ -8,6 +8,7 @@ from discord.gateway import DiscordWebSocket, _log
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 import enkanetwork as enk
 import aiohttp
+import asyncio
 #paramètres
 
 #mobile status
@@ -256,21 +257,47 @@ async def on_message(msg: discord.Message):
 
 async def enk_autocomplete(interaction: discord.Interaction, current: str):
     enklist = []
-
-    data = await enkaclient.fetch_user_by_uid("746264242")
+    data = await enkaclient.fetch_user_by_uid(str(current))
+    
     for i in data.characters:
-        enklist.append(f"{i.name}({i.id})")
+        enklist.append(f"{i.name} ({data.player.nickname})")
     return [
         app_commands.Choice(name=char, value=char)
         for char in enklist
     ]
 
-@client.tree.command(name="autocomplete_test", guild=guild_id)
-@app_commands.autocomplete(uid=enk_autocomplete, character=enk_autocomplete)
-async def enkatests(interaction: discord.Interaction, uid: int, character: str):
+@client.tree.command(name="autocomplete_test", description="permet de récupérer les infos d'un compte Genshin Impact", guild=guild_id)
+@app_commands.autocomplete(character=enk_autocomplete)
+@app_commands.describe(character="l'UID Genshin que tu veux chercher")
+async def enkatests(interaction: discord.Interaction, character: str):
+    
+    emb = discord.Embed(title=f"Le build de {character}", description=f"", timestamp=datetime.datetime.now())
+    await interaction.response.send_message(embed=emb, ephemeral=True)
 
-    await interaction.response.send_message(f'Your favourite fruit seems to be {character}', ephemeral=True)
+async def text_autocomplete(interaction: discord.Interaction, current: str):
+    randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
+    return [
+        app_commands.Choice(name=i, value=i)
+        for i in randresponse
+    ]
 
+@client.tree.command(name="summon", description="permet d'invoquer un utilisateur", guild=guild_id)
+@app_commands.autocomplete(phrase=text_autocomplete)
+@app_commands.describe(phrase="le texte que tu veux que l'invocation dise", user="l'utilisateur que tu veux invoquer")
+async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str]):
+    pdp = await user.avatar.read()
+    troll = await interaction.channel.create_webhook(name=user.display_name, avatar=pdp)
+    
+    await interaction.response.send_message(f"{user.display_name} a été summon avec succès", ephemeral=True)
+    if not phrase:
+        randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
+        await troll.send(random.choice(randresponse))
+        await asyncio.sleep(2)
+        await troll.delete()
+    else:
+        await troll.send(phrase)
+        await asyncio.sleep(2)
+        await troll.delete()
 
 #login check + bot login events
 @client.event

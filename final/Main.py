@@ -12,9 +12,9 @@ import collections
 from collections import * #type: ignore
 
 #Import de discord et modules discord
-import discord 
+import discord
 import discord.ext.commands
-from discord import app_commands, Team
+from discord import app_commands, Team, ui
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
@@ -25,7 +25,8 @@ import blagues_api as bl
 import brawlstats as brst
 import enkanetwork as enk
 import fortnite_api as ftn
-
+from fortnite_api import errors
+from rule34Py import rule34Py
 
 #paramètres
 
@@ -73,9 +74,15 @@ BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
 UNB_TOKEN = os.getenv("unbelivaboat_api_token")
+<<<<<<< Updated upstream
 INSTA_password = ""
+=======
+
+>>>>>>> Stashed changes
 enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
-# client def
+fnapi = ftn.FortniteAPI(api_key=str(FN_TOKEN), run_async=True)
+
+# discord client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
         super().__init__(intents=intents)
@@ -100,10 +107,10 @@ intents = discord.Intents.all()
 client = MyClient(intents=intents)
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
-botlink="https://discordapp.com/users/1102573935658283038"
 DiscordWebSocket.identify = identify
 logs_channel = 1131864743502696588
 
+# autres clients API
 unbclient = unb.UnbeliClient(token=str(UNB_TOKEN))
 blclient = bl.BlaguesAPI(token=str(BLAGUES_TOKEN))
 
@@ -146,11 +153,10 @@ class verifyview(discord.ui.View):
     @discord.ui.button(label="suivant", style=discord.ButtonStyle.red)
     async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.interaction.edit_original_response(content="test2")
-
+        
 @client.tree.command(name="ping", description="[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
     emb=discord.Embed(description=f"Pong ! 🏓 {round(client.latency, 1)}", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
-
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
 @client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot")
@@ -210,28 +216,27 @@ async def sendrule(interaction: discord.Interaction):
     app_commands.Choice(name="Scissors", value="scissors"),
     ])
 async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str]):
-    rpslist = ["Rock", "Paper", "Scissors"]
+    rpslist = ["rock", "paper", "scissors"]
     e = random.choice(rpslist)
-    e = e.replace("Rock","Rock ✊").replace("Paper","Paper 🤚").replace("Scissors","Scissors ✂")
+    e = e.replace("rock","Rock ✊").replace("paper","Paper 🤚").replace("scissors","Scissors ✂")
     await interaction.response.send_message(content=f"{e}")
-    await asyncio.sleep(2)
-    if choix.name == e:
+    await asyncio.sleep(1)
+    if choix.value == e:
         await interaction.edit_original_response(content=f"{e}\n\négalité!")
-    if choix.name == "Scissors" and e == "Paper":
+    if choix.value == "scissors" and e == "paper":
         await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.name == "Paper" and e == "Rock":
+    if choix.value == "paper" and e == "rock":
         await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.name == "Rock" and e == "Scissors":
+    if choix.value == "rock" and e == "scissors":
         await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.name == "Paper" and e == "Scissors":
+    if choix.value == "paper" and e == "scissors":
         await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
-    if choix.name == "Rock" and e == "Paper":
+    if choix.value == "rock" and e == "paper":
         await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
-    if choix.name == "Scissors" and e == "Rock":
+    if choix.value == "scissors" and e == "rock":
         await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
 
 @client.tree.context_menu(name="Profil", guild=guild_id1)
-@app_commands.guild_only()
 @app_commands.rename(user="Membre")
 async def profil(interaction: discord.Interaction, user: discord.Member):
     # Remove unnecessary characters
@@ -243,7 +248,6 @@ async def profil(interaction: discord.Interaction, user: discord.Member):
     emb.set_thumbnail(url= f"{user.display_avatar}")   #Pour ajouter la pp du type
     emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
     await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
-
 
 
 class SimpleView(discord.ui.View):
@@ -349,6 +353,39 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
         channel = await client.fetch_channel(1130945537907114139)
         await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
 
+
+async def text_autocomplete(interaction: discord.Interaction, current: str):
+    randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
+    return [
+        app_commands.Choice(name=i, value=i)
+        for i in randresponse
+    ]
+
+@client.tree.command(name="summon", description="permet d'invoquer un utilisateur", guild=guild_id1)
+@app_commands.autocomplete(phrase=text_autocomplete)
+@app_commands.describe(phrase="le texte que tu veux que l'invocation dise", user="l'utilisateur que tu veux invoquer")
+async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str]):
+    pdp = await user.avatar.read()
+    troll = await interaction.channel.create_webhook(name=user.display_name, avatar=pdp)
+    
+    await interaction.response.send_message(f"{user.display_name} a été summon avec succès", ephemeral=True)
+
+    if user.id == 340535506758795264:
+        await troll.send("https://media.discordapp.net/attachments/631844119307616266/1069688737610608730/InShot_20230130_191141745.gif")
+        await asyncio.sleep(2)
+        await troll.delete()
+
+    if not phrase:
+        randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
+        await troll.send(random.choice(randresponse))
+        await asyncio.sleep(2)
+        await troll.delete()
+
+    else:
+        await troll.send(phrase)
+        await asyncio.sleep(2)
+        await troll.delete()
+
 @client.tree.command(name="webhook", description="envoie un message via un webhook", guild=guild_id1)
 @app_commands.default_permissions(manage_guild=True)
 @app_commands.describe(texte=f"ce que tu veux que le webhook dise")
@@ -420,24 +457,60 @@ async def sync(interaction: discord.Interaction):
 @app_commands.describe(choix="Choisissez le jeu (pour le moment seul Genshin Impact fonctionne, à moitié)")
 @app_commands.describe(uid="le pseudo ou identifiant de l'utilisateur")
 async def gameinfo(interaction: discord.Interaction, choix: app_commands.Choice[str], uid: str):
-        if choix.value == "bs":
-            await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
-        if choix.value == "fn":
-            await interaction.response.send_message("cette fonction n'a pas encore été implémentée", ephemeral=True)
-        if choix.value == "gi":
-            try: 
-                data = await enkaclient.fetch_user(uid)
-            except enk.EnkaPlayerNotFound as vr:
-                emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
-                emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
-                emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-                await interaction.response.send_message(embed=emb, ephemeral=True)
-            else:
-                emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
-                emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
-                emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
-                emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-                await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
+    if choix.value == "bs":
+        bs_token = os.getenv("bs_api_token")
+        bsclient = brst.Client(token=bs_token, is_async=True)
+        bstag = uid.casefold().replace("#", "")
+        player = await bsclient.get_profile(bstag)
+        club = await player.get_club()
+        hexcolorlist = ["0xffa2e3fe","0xffffffff","0xff4ddba2","0xffff9727","0xfff9775d","0xfff05637","0xfff9c908","0xffffce89","0xffa8e132","0xff1ba5f5","0xffff8afb","0xffcb5aff"]
+        namecolorlist = [discord.Color.blue(), discord.Color.light_embed(), discord.Color.dark_green(), discord.Color.orange(), discord.Color.red(),discord.Color.dark_red(),discord.Color.yellow(),discord.Color.default(),discord.Color.green(),discord.Color.dark_blue(),discord.Color.pink(),discord.Color.purple()]
+        
+        i = 0
+        while not player.name_color == hexcolorlist[i]:
+            i = i + 1
+        playcolor = namecolorlist[i]
+        if club == None:  # Player n'a pas de club?
+            playeremb = discord.Embed(title=f"**Profil de {player.name}**", description=f"**Tag:** {player.tag}\n\n<:bstrophy:1141793310055350353> **Trophées:** ``{player.trophies}``\n<:bstrophy:1141793310055350353> **Record Personel:** {player.highest_trophies}\n\n<:club:1143949868147154944> **Club:** Aucun\n\n**Victoires en Showdown:**\n<:showdown:1142850368276025374> {player.solo_victories} <:duo_showdown:1142851071740485683> {player.duo_victories}\n\n**Victoires en 3v3:** \n<:3v3:1142851875503341618> {player.x3vs3_victories}\n\n **Brawlers:** {len(player.brawlers)}/70", color=playcolor)
+        else:
+            playeremb = discord.Embed(title=f"**Profil de {player.name}**", description=f"**Tag:** {player.tag}\n\n<:bstrophy:1141793310055350353> **Trophées:** {player.trophies}\n<:bstrophy:1141793310055350353> **Record Personel:** {player.highest_trophies}\n\n<:club:1143949868147154944> **Club:** {club.name} ({club.tag})\n\n**Victoires en Showdown:**\n<:showdown:1142850368276025374> {player.solo_victories} <:duo_showdown:1142851071740485683> {player.duo_victories}\n\n**Victoires en 3v3:** \n<:3v3:1142851875503341618> {player.x3vs3_victories}\n\n **Brawlers:** {len(player.brawlers)}/70", color=playcolor)
+        icon_class = str(player.icon).replace("{'id': ","https://cdn-old.brawlify.com/profile/").replace("}",".png")
+        playeremb.set_thumbnail(url = icon_class)
+        await interaction.response.send_message(embed=playeremb)
+
+    if choix.value == "fn":
+        try:
+            e = await fnapi.stats.fetch_by_name(name=uid) # type: ignore
+        except errors.Forbidden as unauthorized:
+            emb = discord.Embed(title=f"Erreur", description=unauthorized, color=discord.Color.orange())
+            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
+        except errors.NotFound as notfound:
+            emb = discord.Embed(title=f"Erreur", description=notfound, color=discord.Color.orange())
+            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
+        else:
+            emb = discord.Embed(title=f"Profil Fortnite de {e.user}", color=discord.Color.blue())
+            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills}kills\nDuo: {e.stats.all.duo.kills}kills\nTrio: {e.stats.all.trio.kills}kills\nSquad: {e.stats.all.solo.kills}kills") # type: ignore
+            await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
+    if choix.value == "gi":
+        try: 
+            data = await enkaclient.fetch_user(uid)
+        except enk.EnkaPlayerNotFound as vr:
+            emb=discord.Embed(title="Erreur", url="https://enka.network/404", description=f"=== UID introuvable ===\n\n{vr}", color = discord.Colour.red(), timestamp=datetime.datetime.now())
+            emb.set_thumbnail(url=f"{interaction.user.display_icon}") #type: ignore
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True)
+        else:
+            emb=discord.Embed(title=f":link: Vitrine Enka de {data.player.nickname}", url=f"https://enka.network/u/{uid}", description=f"=== Infos du compte ===\n\nRang d'aventure: {data.player.level} | Niveau du monde: {data.player.world_level}\n\nBio: {data.player.signature}\n\n<:achievements:1129447087667433483> Succès: {data.player.achievement}\n\n<:abyss:1129447202566180905> Profondeurs spiralées : étage {data.player.abyss_floor} | salle {data.player.abyss_room}", color = discord.Color.blue(), timestamp=datetime.datetime.now())
+            emb.set_author(name=f"{client.user}", url=f"https://discordapp.com/users/{client.user.id}", icon_url=client.user.avatar)
+            emb.set_thumbnail(url=f"{data.player.avatar.icon.url}")
+            emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+            await interaction.response.send_message(embed=emb, ephemeral=True, view=DropdownView(data))
 
 class Dropdown(discord.ui.Select):
     def __init__(self, data):
@@ -457,7 +530,7 @@ class Dropdown(discord.ui.Select):
         # the user's favourite colour or choice. The self object refers to the
         # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-        emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0].title()}", description=f"Voici les informations du personnage:\n\ncrit rate: {self.char}", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb=discord.Embed(title=f"{self.data.player.nickname}'s {self.values[0].title()}", description=f"Voici les informations du personnage:\n\ncrit rate:", color = discord.Color.green(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", icon_url=f"{self.data.player.avatar.icon.url}", url=f"https://enka.network/u/{self.data.uid}")
         emb.set_footer(text=f"{interaction.user.name}", icon_url=interaction.guild.icon) #type: ignore     
         await interaction.response.send_message(f"Voici le build de {self.values[0].title()}:", ephemeral=True, embed=emb)
@@ -470,6 +543,16 @@ class DropdownView(discord.ui.View):
         self.add_item(Dropdown(data))
 #report system
 
+@client.tree.command(name="rand_r34", guild=guild_id1, nsfw=True)
+async def r34(interaction: discord.Interaction, tag1: str, tag2: str, tag3: str, tag4: str, tag5: str):
+    cul = r34Py.random_post(tags=[tag1, tag2, tag3, tag4, tag5])
+    try:
+        r34Py.random_post(tags=[tag1, tag2, tag3, tag4, tag5])
+    except Exception as e:
+        await interaction.response.send_message(content=e, ephemeral=True)
+    else:
+        await interaction.response.send_message(content=cul.image, ephemeral=True)
+
 #def modal
 class ReportModal(discord.ui.Modal, title="signalement"):
     def __init__(self, msg):
@@ -481,7 +564,7 @@ class ReportModal(discord.ui.Modal, title="signalement"):
         textinput = self.textinput
         chat = await client.fetch_channel(1130945538406240405)
         emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = discord.Color.green(), timestamp=datetime.datetime.now())
-        emb.set_author(name=f"{client.user}", url=f"{botlink}", icon_url=client.user.avatar)
+        emb.set_author(name=f"{client.user}", url=f"https://discordapp.com/users/{client.user.id}", icon_url=client.user.avatar)
         emb.set_image(url=self.msg.attachment[0].url)
         emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
         emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore
@@ -494,23 +577,46 @@ async def report(interaction: discord.Interaction, message: discord.Message):
     msg = message
     await interaction.response.send_modal(ReportModal(msg))
 
-class say(discord.ui.Modal, title="contenu du reply"):
+class say(ui.Modal, title="contenu du reply"):
     def __init__(self, msg):
         self.msg = msg
         super().__init__()
-    textinput = discord.ui.TextInput(label="Texte", min_length=1)
-    ping = discord.ui.TextInput(label="Mention", min_length=3, max_length=3, placeholder="Oui ou Non", required=True)
-    ping2 = bool(ping.value.lower().replace("oui", "True").replace("non", "False"))
+    textinput = ui.TextInput(style=discord.TextStyle.paragraph, label="Texte", min_length=1)
+    ping = ui.TextInput(style=discord.TextStyle.short, label="Mention", min_length=3, max_length=3, placeholder="Oui ou Non", required=False)
+    ping2 = bool(ping.value.casefold().replace("oui", "True").replace("non", "False"))
     async def on_submit(self, interaction: discord.Interaction):
-        await self.msg.reply(self.textinput.value, mention_author=self.ping2)
-        await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
+        if not self.ping:
+            await self.msg.reply(self.textinput.value, mention_author=True)
+            await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
+        else:
+            await self.msg.reply(self.textinput.value, mention_author=self.ping2)
+            await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
 
-@client.tree.context_menu(name="Say", guild=guild_id1)
+
+
+@client.tree.context_menu(name="Say")
 @app_commands.default_permissions(manage_guild=True)
 async def pins(interaction: discord.Interaction, message: discord.Message):
     msg = message
     await interaction.response.send_modal(say(msg))
     await interaction.channel.typing()
+
+
+# async def colorautocomplete(interaction: discord.Interaction, current: str):
+#     colorlist = ["0x3498DB"]
+#     
+#     return [
+#         app_commands.Choice(name=i, value=i)
+#         for i in colorlist
+#     ]
+# @client.tree.command(name="role_edit", description="[PREMIUM] permet de modifier votre role unique", guild=guild_id1)
+# @app_commands.autocomplete(role=colorautocomplete)
+# @app_commands.choices(option=[
+#     app_commands.Choice(name="Modifier", value="edit"),
+#     app_commands.Choice(name="Créer", value="create"),
+#     ])
+# async def rolecolorchange(interaction: discord.Interaction, option: app_commands.Choice[str], role: Optional[str]):
+#     await roledumec.edit(color=discord.Color.from_str(str(role)))
 
 #auto events
 
@@ -520,7 +626,7 @@ async def on_message_edit(before, after):
     if before.author.bot == True or before.author == client.user or before.content == after.content:
         return
     else:
-        if before.guild.id ==1130945537181499542:
+        if before.guild.id == 1130945537181499542:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
@@ -529,7 +635,8 @@ async def on_message_edit(before, after):
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
             webfetch = await client.fetch_channel(1131864743502696588)
             await webfetch.send(embed=emb)
-        if before.guild.id ==1130798906586959946:
+
+        if before.guild.id == 1130798906586959946:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
@@ -561,7 +668,7 @@ async def on_message_delete(message: discord.Message):
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 await channel.send(embed=emb)
 
-        if message.guild.id ==1130798906586959946: # BreadStudios Lab
+        if message.guild.id == 1130798906586959946: # BreadStudios Lab
             channel1 = await client.fetch_channel(1141995718228324482)
             liste = []
             if message.attachments:
@@ -574,132 +681,170 @@ async def on_message_delete(message: discord.Message):
                 emb=discord.Embed(title=f"un message de {message.author.name} a été supprimé", description=f"contenu du message : \n```{message.content}```", color=discord.Color.brand_red())
                 emb.add_field(name="chat:", value=message.channel.jump_url)
                 await channel1.send(embed=emb)
+        else:
+            return
 
 ## module de message de bienvenue
 @client.event
 async def on_member_join(member: discord.Member):
-    emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
-    emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
-    emb.set_footer(text=client.user, icon_url=client.user.avatar)
-    channel = client.get_channel(1130945537907114139)
-    msg = await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
-    await msg.add_reaction("<:LBgigachad:1134177726585122857>")
+    LBchannel = client.get_channel(1130945537907114139)
+    Kchannel = client.get_channel(1129912901847765002)
+    statchannel = client.get_channel(1163733415229669376)
+    if member.guild.id == LBchannel.guild.id:
+        emb=discord.Embed(title="Nouveau Pain!", description=f"Un nouveau pain vient de sortir du four! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"https://discordapp.com/users/{client.user.id}")
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+
+        msg = await LBchannel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+        await msg.add_reaction("<:LBgigachad:1134177726585122857>")
+        rolelist = [1151548927942860872, 1151549497399324732, 1151549661765709894, 1151549293749075979, 1151554619265265816] # dans l'ordre : BREADMACHT, PINGS, LEVEL, JEUX, AUTRES
+        for i in range(len(rolelist)):
+            await member.add_roles(discord.Object(rolelist[i]))
+            clearcount = len([x for x in member.guild.members if not x.bot])
+            await statchannel.edit(name=f"Utilisateurs : {clearcount}")
+
+    if member.guild.id == Kchannel.guild.id:
+        emb=discord.Embed(title="Nouveau Horny!", description=f"Un nouveau membre horny vient de rejoindre ! Bienvenue sur {member.guild.name} {member.display_name}! <:kOrgasme:1142062446421475439>", color = discord.Color.pink(), timestamp=datetime.datetime.now())
+        emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"https://discordapp.com/users/{client.user.id}")
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+
+        msg = await Kchannel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+        await msg.add_reaction("<:LBgigachad:1134177726585122857>")
+
 
 ##module des messages d'au revoir
 @client.event
 async def on_member_remove(member: discord.Member):
-    channel=client.get_channel(1130945537907114139)
-    emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
-    emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{botlink}")
-    emb.set_footer(text=client.user, icon_url=client.user.avatar)       
-    msg = await channel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
-    await msg.add_reaction("<:LBroger:1136059237441749132>")
+    LBchannel = client.get_channel(1130945537907114139)
+    Kchannel = client.get_channel(1129912901847765002)
+    statchannel = client.get_channel(1163733415229669376)
 
+    if member.guild.id == LBchannel.guild.id:
+        emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
+        emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{client.user.id}")
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+        msg = await LBchannel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+        await msg.add_reaction("<:LBroger:1136059237441749132>")
+        count = member.guild.member_count
+        clearcount = count - 9
+        await statchannel.edit(name=f"Utilisateurs : {clearcount}")
+
+    if member.guild.id == LBchannel.guild.id:
+        emb=discord.Embed(title="Au revoir!", description=f"Notre confrère horny {member.name} vient de nous quitter... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
+        emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{client.user.id}")
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+        msg = await Kchannel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
+        await msg.add_reaction("<:kNotFine:1131273911254925412>")
+    else:
+        return
 
 @client.event
 async def on_message(message: discord.Message):
     luxurechannel = await client.fetch_channel(1132379187227930664)
+    LBstaffrole = luxurechannel.guild.get_role(1130945537227632648)
+    e = message.content.casefold()
+
     if message.author.bot == True:
         return
+    if message.channel.guild ==luxurechannel.guild:
+        if message.channel.id == 1134102319580069898:
+            await message.create_thread(name=f"QOTD de {message.author.display_name}")
 
-    if message.channel.id == 1134102319580069898:
-        await message.create_thread(name=f"QOTD de {message.author.display_name}")
+        if message.channel.id == 1130945537907114141:
+            await message.create_thread(name=f"Annonce de {message.author.display_name}")
+            await message.publish()
 
-    if message.channel.id == 1130945537907114141:
-        await message.create_thread(name=f"Annonce de {message.author.display_name}")
-        await message.publish()
+        if message.channel.id == 1153333206372855818:
+            await message.create_thread(name=f"Annonce de {message.author.display_name}")
+            await message.add_reaction("<:LBgigachad:1134177726585122857>")
 
-    if message.channel.id == 1153333206372855818:
-        await message.create_thread(name=f"Annonce de {message.author.display_name}")
-        await message.add_reaction("<:LBgigachad:1134177726585122857>")
-
-    if message.channel == luxurechannel:
-        if message.author.id == 601041630081974292 or message.author.id == 911467405115535411:
-            if message.attachments:
-                emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                await message.create_thread(name=f"{message.author}")
-                for i in range(len(emojilist)):
-                    await message.add_reaction(emojilist[i])
-
-            if not message.attachments:
-                word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
-                for i in range(len(word)):
-                    if word[i] in str(message.content):
-                        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                        await message.create_thread(name=f"{message.author}")
-                        for i in range(len(emojilist)):
-                            await message.add_reaction(emojilist[i])
+        if message.channel == luxurechannel:
+            if LBstaffrole in message.author.roles:
+                if message.attachments:
+                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                    await message.create_thread(name=f"{message.author}")
+                    for i in range(len(emojilist)):
+                        await message.add_reaction(emojilist[i])
+    
+                if not message.attachments:
+                    word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
+                    for i in range(len(word)):
+                        if word[i] in str(message.content):
+                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                            await message.create_thread(name=f"{message.author}")
+                            for i in range(len(emojilist)):
+                                await message.add_reaction(emojilist[i])
+                else:
+                    return
             else:
-                return
+                if message.attachments:
+                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                    await message.create_thread(name=f"{message.author}")
+                    for i in range(len(emojilist)):
+                        await message.add_reaction(emojilist[i])
 
-        else:
-            if not message.attachments:
-                word = ["discordapp.com", "rule34.xxx", "pornhub.com", "http"]
-                for i in range(len(word)):
-                    if word[i] in str(message.content):
-                        emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                        await message.create_thread(name=f"{message.author}")
-                        for i in range(len(emojilist)):
-                            await message.add_reaction(emojilist[i])
-                    else:
-                        try:
-                            await message.delete()
-                        except discord.errors.NotFound as err:
-                            print(err)
+                if not message.attachments:
+                    word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
+                    for i in range(len(word)):
+                        if word[i] in str(message.content):
+                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+                            await message.create_thread(name=f"{message.author}")
+                            for i in range(len(emojilist)):
+                                await message.add_reaction(emojilist[i])
                         else:
-                            await message.author.send(f"tu n'est pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp", spoiler=True))
-                            return
-            else:
-                emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                await message.create_thread(name=f"{message.author}")
-                for i in range(len(emojilist)):
-                    await message.add_reaction(emojilist[i])
+                            await message.delete()
+                            await message.author.send(f"tu n'es pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
+
 # en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
 
     if not message.author.id == 911467405115535411: # fonction qui m'immunise de ces conneries
-        e = message.content.casefold()
 
         if " bite" in e:
             await message.channel.typing()
             await asyncio.sleep(2)
             await message.reply("https://cdn.discordapp.com/attachments/778672634387890196/1142544668488368208/nice_cock-1.mp4")
 
-        if "UwU" in message.content:
+        if "UwU" in e:
             await message.add_reaction("<a:DiscoUwU:1158497203615187015>")
 
         word1 = "quoi"
-        if e.endswith(word1):  #Verifie si la combinaison est dans le message ET si x = 1
+        if e.endswith(word1): # Verifie si la combinaison est dans le message ET si x = 1
             await message.channel.typing()
             await message.reply("coubaka! UwU")
 
         if message.content.startswith(client.user.mention):
             await message.channel.typing()
             await asyncio.sleep(3)
-            await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
+            rand = random.randint(1, 2)
+            if rand == 1:
+                await message.reply("https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png")
+            if rand == 2:
+                await message.reply(file=discord.File("src/audio/HORN.mp3"))
 
         if message.content.startswith("<:LBhfw1:1133660402081865788> <:LBhfw2:1133660404665548901>"):
            await message.reply("t'es pas très sympa, tu mérite [10h de ayaya](https://www.youtube.com/watch?v=UCDxZz6R1h0)!")
-        randcramptes1 = "cramptés?".casefold()
+        randcramptes1 = "cramptés ?".casefold()
         randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)", "tg"]
         for i in range(len(randcramptes1)):    #Check pour chaque combinaison
-            if message.content.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
+            if e.startswith(f"t'as les {randcramptes1[i]}"):  #Verifie si la combinaison est dans le message
                 await message.channel.typing()
                 await message.reply(random.choice(randcramptes2))
                 break
         if ":moyai:" in message.content:
             await message.reply("https://canary.discord.com/store/skus/1037148024792690708/moai")
-            
+
     word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
     for i in range(len(word2)):    #Check pour chaque combinaison
         if word2[i] in message.content:
             vxTiktokResolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
-            await message.channel.send(content=f"résolution du lien Tiktok envoyé à l'origine par {message.author.display_name}[:]({vxTiktokResolver})")
+            await message.channel.send(content=f"résolution du Tiktok envoyé par {message.author.display_name}[:]({vxTiktokResolver})")
             await message.delete()
-    
+
     if message.channel.id == 1130945537907114145 and message.attachments:
         emojilist = ["<:LBmeh:1131556048948449400>", "♻"]
         if random.randint(1, 50) == 1:
             await message.add_reaction(random.choice(emojilist))
+<<<<<<< Updated upstream
 
 @client.event
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
@@ -806,54 +951,62 @@ session.start()
 async def on_reaction_remove(reaction: discord.Reaction, user: discord.User):
     return
 
+=======
+>>>>>>> Stashed changes
 #auto tasks
+
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
+    guild = client.get_guild(1130945537181499542)
+    apple = client.get_user(1014832884764393523)
+    clearcount = len([x for x in guild.members if not x.bot])
+    randmember = random.choice(guild.members)
+    randmember2 = random.choice(guild.members)
     game = [
-            "Apple en train de chialer",
+            f"{apple.display_name} en train de chialer",
             "Lilo et Nightye sur Smash",
             "Amouranth, mais pas sur Twitch",
             "Amouranth dire que JDG ressemble à un ananas",
             "ce bg de Cyrger qui a payé pour mon hébergement",
             "webstrator.com",
             "pas ma mère sur Pornhub !",
-            "à quoi jouent les membres du serveur",
+            f"à quoi jouent les {clearcount} membres du serveur",
             "Chainsaw Man sur Crunchyroll",
             "un porno gay avec DraftBot et Dyno",
             "mon 69ème statut.",
             "maman, je passe à la télé !",
-            "Wishrito, traverse la rue et tu trouveras du travail",
+            f"{guild.owner.display_name}, traverse la rue et tu trouveras du travail",
             "pas Boku No Pico",
             "Wishrito se faire enculer sur Fortnite pendant que GobletMurt regarde",
-            "Wishrito toucher de l'herbe (c'est faux)",
+            f"{guild.owner.display_name} toucher de l'herbe (c'est faux)",
             "Alan faire du bon contenu",
             "les nudes de DraftBot",
             "Fallen Condoms",
             "mec, le serveur est actif !",
-            "la bite de Apple. ah, nan j'ai rien dit, elle est si petite que je la vois pas!",
+            f"la bite de {randmember.display_name}. ah, nan j'ai rien dit, elle est si petite que je la vois pas!",
             "un enfant et prie pour qu'un camion passe",
             "Mee6 sous la douche~",
             "un documentaire sur Auschwitz",
             "Sword Art Online",
             "GobletMurt mettre un balais dans le cul de Milanozore",
             "Enka.Network",
-            "les membres du serveur !",
+            f"les {clearcount} membres du serveur !",
             "Lotharie et sa colonne dans le cul",
-            "Fenrixx en train de chasser des furries",
-            "i est apple qui regarde Alex in Harlem",
+            "Fenrixx se faire chasser par les furries",
+            f"{apple.display_name} qui regarde Alex in Harlem",
             "Maniak troller Lotharie",
             "Krypto qui est perdu",
             "les muscles saillants des staff",
             "Rule34",
-            "La breadmacht envahir la Pologne",
+            "La Breadmacht envahir la Pologne",
             "Monster Musume",
-            "l'appendice pénétrant de daddy Fenrixx~ UwU",
+            f"l'appendice pénétrant de daddy {guild.owner.name.title()}~ UwU",
             "le OnlyFans de Nightye",
             "Chuislay en train de répendre la sainte baguette",
             "mec, je me transforme en sexbot!",
-            "le journal de la Boulangerie",
+            f"le journal de {guild.name}",
             "Nightye qui a retrouvé le trophée 1m de Wankil",
-            "Sora réduire Apple en esclavage",
+            f"{randmember.display_name} réduire {randmember2.display_name} en esclavage",
         ]
     activity = discord.Activity(type = discord.ActivityType.watching, name=random.choice(game))
     await client.change_presence(activity=activity, status=discord.Status.online)
