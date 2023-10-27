@@ -1,9 +1,9 @@
 function searchPage() {
     var input = document.getElementById("search-input").value.toLowerCase();
     var sections = document.querySelectorAll("section");
-    var noResultsMessage = document.getElementById("no-results-message");
+    var noResultsMessages = document.querySelectorAll(".no-results-message");
 
-    var foundResults = false; // Pour suivre si des résultats ont été trouvés
+    var foundResults = false;
 
     for (var i = 0; i < sections.length; i++) {
         var section = sections[i];
@@ -11,17 +11,17 @@ function searchPage() {
 
         if (content.includes(input)) {
             section.style.display = "block";
-            foundResults = true; // Au moins un résultat a été trouvé
+            foundResults = true;
         } else {
             section.style.display = "none";
         }
     }
 
-    if (!foundResults) {
-        // Aucun résultat trouvé, afficher un message d'erreur
-        noResultsMessage.style.display = "block";
-    } else {
-        // Des résultats ont été trouvés, masquer le message d'erreur
-        noResultsMessage.style.display = "none";
+    for (var i = 0; i < noResultsMessages.length; i++) {
+        if (foundResults) {
+            noResultsMessages[i].style.display = "none";
+        } else {
+            noResultsMessages[i].style.display = "block";
+        }
     }
 }
