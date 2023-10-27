@@ -106,3 +106,13 @@ p {
 .sub-section {
   margin-top: 10px;
 }
+/* Votre CSS pour le bouton Home */
+.home-button {
+  text-decoration: none;
+  color: #fff;
+  padding: 15px;
+}
+
+.home-button img {
+  width: 30px;
+}
