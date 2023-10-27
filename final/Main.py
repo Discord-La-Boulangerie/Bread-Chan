@@ -605,12 +605,71 @@ class say(ui.Modal, title="contenu du reply"):
             await self.msg.reply(self.textinput.value, mention_author=self.ping2)
             await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
 
+class UnbanModal(discord.ui.Modal, title="Formulaire de débanissement"):
+    def __init__(self, msg):
+        self.msg = msg
+        super().__init__()
+    textinput = discord.ui.TextInput(label="Pourquoi devrait-tu être unban ?", min_length=100, style=discord.TextStyle.paragraph)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        textinput = self.textinput
+        chat = await client.fetch_channel(1130945538406240405)
+        emb=discord.Embed(title="Débanissement", description=f"{interaction.user.display_name} vient de créer une demande d'unban :\n\nRaison : {textinput}", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb.set_author(name=f"{client.user}", url=f"https://discordapp.com/users/{client.user.id}", icon_url=client.user.avatar)
+        emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
+        emb.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon) # type: ignore
+        #send embed to mod chat
+        await chat.send(embed=emb) # type: ignore
+        await interaction.response.send_message(content=f"ta demande a bien été envoyée, {interaction.user.display_name}", ephemeral=True)
+
+class unbanreqview(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+    async def on_timeout(self) -> None:
+    # Step 2
+        self.clear_items()
+        await self.message.edit(view=self)
+    guild = client.get_guild(1130945537181499542)
+    unbanchat = client.get_channel(1130945538406240399)
+    @discord.ui.button(label="Oui", style=discord.ButtonStyle.green)
+    async def on_click1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        emb = discord.Embed(title="Demande d'unban", description=f"{interaction.user.name, f' ({interaction.user.id})'} a envoyé une demande d'unban", timestamp=datetime.datetime.now(), color=discord.Color.green())
+        emb.set_author(name=f"{self.guild.name}", url=self.guild.icon)
+        emb.set_thumbnail(url=interaction.user.avatar)
+        emb.set_footer(text=client.user, icon_url=client.user.avatar)
+        self.clear_items()
+        msg = await self.unbanchat.send(embed=emb)
+        reactlist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
+        for i in range(len(reactlist)):
+            await msg.add_reaction(reactlist[i])
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Non", style=discord.ButtonStyle.red)
+    async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Ok")
+        self.clear_items()
+        await self.message.edit(view=self)
+
+last_command_time = None
 @client.tree.command(name="unban_request")
 async def ban_appeal(interaction: discord.Interaction):
         guild = client.get_guild(1130945537181499542)
-        bancheck = await guild.fetch_ban(discord.Object(interaction.user.id))
-        
-
+        global last_command_time
+        # Vérifiez si last_command_time est défini et si assez de temps s'est écoulé (une semaine ici)
+        if last_command_time is None or (datetime.datetime.now() - last_command_time) > datetime.timedelta(weeks=1):
+                try:
+                    await guild.fetch_ban(discord.Object(interaction.user.id))
+                except discord.errors.NotFound:
+                    await interaction.response.send_message("tu n'es pas banni de La Boulangerie", ephemeral=True)
+                else:
+                    e = await guild.fetch_ban(discord.Object(interaction.user.id))                
+            # Exécutez la commande
+                    await interaction.response.send_message(f"Tu as été banni pour cette raison : ``{e.reason}``\n\nSouhaite-tu envoyer une demande de débanissement au staff ?", view=unbanreqview())
+            # Mettez à jour last_command_time avec la date actuelle
+                last_command_time = datetime.datetime.now()
+        else:
+            # Informez l'utilisateur qu'il doit attendre
+            await interaction.response.send_message(f"Tu dois encore attendre {datetime.datetime.now() - last_command_time} avant de pouvoir utiliser cette commande.", ephemeral=True)
 
 @client.tree.context_menu(name="Say")
 @app_commands.default_permissions(manage_guild=True)
@@ -919,9 +978,8 @@ async def on_message(message: discord.Message):
             await message.delete()
 
     if message.channel.id == 1130945537907114145 and message.attachments:
-        emojilist = ["<:LBmeh:1131556048948449400>", "♻"]
         if random.randint(1, 50) == 1:
-            await message.add_reaction(random.choice(emojilist))
+            await message.add_reaction(random.choice(client.emojis))
 
 #auto tasks
 
