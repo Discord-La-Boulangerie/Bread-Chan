@@ -2,13 +2,14 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Bot Discord - Bread Chan</title>
+    <title>Bread Chan - Page d'accueil</title>
     <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="shortcut icon" href="src/img/bc.png" type="image/x-icon">
 </head>
 <body>
     <header>
         <h1>Welcome to Bread Chan Bot</h1>
-        <img class="bot-image" src="https://cdn.discordapp.com/avatars/1102573935658283038/4207597a3c48808e5400ea2edc3aac93.png?size=1024" alt="Bread Chan Bot">
+        <img class="bot-image" src="src/img/bc.png" alt="Bread Chan" width="75" height="75">
     </header>
     
     <nav>
@@ -49,22 +50,6 @@
         </p>
     </footer>
 
-    <script>
-        function searchPage() {
-            var input = document.getElementById("search-input").value.toLowerCase();
-            var sections = document.querySelectorAll("section");
-
-            for (var i = 0; i < sections.length; i++) {
-                var section = sections[i];
-                var content = section.textContent.toLowerCase();
-
-                if (content.includes(input)) {
-                    section.style.display = "block";
-                } else {
-                    section.style.display = "none";
-                }
-            }
-        }
-    </script>
+    <script src="src/scripts/search.js"></script>
 </body>
 </html>
