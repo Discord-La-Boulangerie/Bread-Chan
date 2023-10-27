@@ -761,6 +761,11 @@ async def on_message_delete(message: discord.Message):
         else:
             return
 
+@client.event
+async def on_member_unban(guild: discord.Guild, user: discord.Member):
+    await user.send(f"tu as été débanni de {guild.name}. enjoy !")
+
+
 ## module de message de bienvenue
 @client.event
 async def on_member_join(member: discord.Member):
