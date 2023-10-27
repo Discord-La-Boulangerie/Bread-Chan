@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bot Discord - Bread Chan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        header {
+            background-color: #7289da;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            display: inline;
+            margin: 0 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .bot-image {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        #search-input {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Bread Chan Bot</h1>
+        <img class="bot-image" src="https://cdn.discordapp.com/avatars/1102573935658283038/4207597a3c48808e5400ea2edc3aac93.png?size=1024" alt="Bread Chan Bot">
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#commands">Commands</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search...">
+            <button onclick="searchPage()">Search</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <section id="features">
+            <h2>Features</h2>
+            <p>Explore the amazing features of Bread Chan Bot.</p>
+            <!-- Add more content about the bot's features here -->
+        </section>
+
+        <section id="commands">
+            <h2>Commands</h2>
+            <p>Discover the available commands and how to use them.</p>
+            <!-- Add information about the bot's commands here -->
+        </section>
+
+        <section id="about">
+            <h2>About Bread Chan Bot</h2>
+            <p>Learn more about the bot's background and development.</p>
+            <!-- Add information about the bot's background here -->
+        </section>
+    </div>
+    
+    <footer>
+        <p>
+            <a href="/pages/tos.html">Terms of Service</a> | <a href="/pages/privacy-policy.html">Privacy Policy</a>
+        </p>
+    </footer>
+
+    <script>
+        function searchPage() {
+            var input = document.getElementById("search-input").value.toLowerCase();
+            var sections = document.querySelectorAll("section");
+
+            for (var i = 0; i < sections.length; i++) {
+                var section = sections[i];
+                var content = section.textContent.toLowerCase();
+
+                if (content.includes(input)) {
+                    section.style.display = "block";
+                } else {
+                    section.style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
