@@ -19,7 +19,15 @@ nav {
   display: flex;
   justify-content: space-between;
 }
-
+nav button {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 0;
+  border: none;
+}
+nav button :hover {
+  cursor:pointer, pointer
+}
 nav ul {
   list-style: none;
   padding: 0;
