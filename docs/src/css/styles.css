@@ -116,3 +116,7 @@ section {
 .home-button img {
   width: 30px;
 }
+
+#no-results-message {
+  display: none;
+}
