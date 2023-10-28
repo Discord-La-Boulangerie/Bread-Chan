@@ -1,3 +1,21 @@
+@import url(https://use.fontawesome.com/releases/v6.4.2/css/all.css);
+
+footer div a {
+  margin: 0 10px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #fff;
+  width: 100px;
+  height: 100px;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  transition: 0.5s;
+  background: rgba(0, 0, 0, 0);
+  color: var(--color);
+  -webkit-box-reflect: below 5px linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+}
+
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -49,6 +67,10 @@ nav a {
   margin: 0 auto;
 }
 
+.lib {
+  font-family: inherit;
+}
+
 .container {
   max-width: 960px;
   margin: 20px auto;
@@ -64,11 +86,15 @@ footer {
   text-align: center;
   padding: 10px 0;
 }
+footer p a {
+  text-decoration: none;
+  color: inherit;
+}
 
 .search-bar {
   display: flex;
   align-items: center;
-  margin: 0 auto;
+  margin: auto;
 }
 
 #search-input {
@@ -103,17 +129,13 @@ section {
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-
-.sub-section {
-  margin-top: 10px;
-}
-/* Votre CSS pour le bouton Home */
-.home-button {
-  text-decoration: none;
-  color: #fff;
-  padding: 15px;
+/* Barre de défilement */
+::-webkit-scrollbar {
+  width: 10px; /* Largeur de la barre de défilement */
 }
 
-.home-button img {
-  width: 30px;
+/* Pouce de la barre de défilement */
+::-webkit-scrollbar-thumb {
+  background: #7289da; /* Couleur du pouce de la barre de défilement */
+  border-radius: 10px;
 }
