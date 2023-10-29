@@ -67,8 +67,10 @@ nav a {
   margin: 0 auto;
 }
 
-.lib {
+#lib ul a {
   font-family: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 .container {
@@ -93,14 +95,12 @@ footer p a {
 
 .search-bar {
   display: flex;
-  align-items: center;
   margin: auto;
 }
 
-#search-input {
-  flex-grow: 1;
-  margin-right: 10px;
-  padding: 5px;
+.search-input {
+  float: right;
+  align-items: center;
 }
 
 h1 {
