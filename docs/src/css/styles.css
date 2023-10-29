@@ -3,7 +3,14 @@
 @font-face {
   font-family: Minecraft, Arial;
   src: url(../font/Minecraft-Regular.ttf);
+
 }
+
+body {
+  background-color: white;
+  color: darkgray;
+}
+
 footer div a {
   margin: 0 10px;
   border-radius: 50%;
