@@ -150,3 +150,8 @@ section {
   background: #7289da; /* Couleur du pouce de la barre de défilement */
   border-radius: 10px;
 }
+
+#story a {
+  text-decoration: none;
+  color: inherit;
+}
