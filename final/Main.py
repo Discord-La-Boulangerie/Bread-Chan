@@ -1,14 +1,11 @@
 #Import des libs python de base
 import os, sys
 import datetime
-import json
 import random
 from dotenv import load_dotenv
 from typing import Optional
-import io
 from io import BytesIO
 import asyncio
-import collections
 from collections import * #type: ignore
 
 #Import de discord et modules discord
@@ -18,6 +15,7 @@ from discord import app_commands, Team, ui
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
+import moderation
 
 #Import des API
 import unbelipy as unb
@@ -131,28 +129,10 @@ async def unbbank(interaction: discord.Interaction, user: Optional[discord.Membe
     if user == None:
         user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=interaction.user.id)
         await interaction.response.send_message(f"voici ton cash : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
-    if not user == None:
+    else:
         user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=user.id)
         await interaction.response.send_message(f"voici le cash de {user.display_name} : {user_balance.bank} <:LBmcbaguette:1140270591828570112>", ephemeral=True)
         await unbclient.close_session()
-
-@client.tree.command(name="leaderboard", description="[FUN] indique le classement global du serveur", guild=guild_id1)
-async def leaderboard(interaction: discord.Interaction):
-    guild_leaderboard = await unbclient.get_guild_leaderboard(guild_id)
-    await interaction.response.send_message(content="test", view=verifyview(interaction), ephemeral=True)
-
-class verifyview(discord.ui.View):
-    def __init__(self, interaction):
-        self.interaction = interaction
-        super().__init__()
-
-    @discord.ui.button(label="précédent", style=discord.ButtonStyle.green)
-    async def on_click1(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.interaction.edit_original_response(content="test1")
-    
-    @discord.ui.button(label="suivant", style=discord.ButtonStyle.red)
-    async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.interaction.edit_original_response(content="test2")
         
 @client.tree.command(name="ping", description="[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
@@ -162,7 +142,7 @@ async def pingpong(interaction: discord.Interaction):
 @client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot")
 async def botinfo(interaction: discord.Interaction):
     emb = discord.Embed(title=f"{client.user.display_name}'s infos", description=f"nom : {client.user.name}\n", color=discord.Color.blue(), timestamp=datetime.datetime.now())
-    emb.set_footer(text=client.user, icon_url=client.user.avatar) #Perso je fous les infos du bot la dessus
+    emb.set_footer(text=client.user, icon_url=client.user.avatar)
     emb.add_field(name="Imports", value=f"Discord.py : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}\nEnkanetwork.py :{enk.__version__}\nBlaguesAPI : ?\nFortnite API : {ftn.__version__}\nPython : {sys.version}", inline=False)
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
@@ -211,30 +191,29 @@ async def sendrule(interaction: discord.Interaction):
 #rps
 @client.tree.command(name="rps", description="[FUN] Shi-Fu-Mi")
 @app_commands.choices(choix=[
-    app_commands.Choice(name="Rock", value="rock"),
-    app_commands.Choice(name="Paper", value="paper"),
-    app_commands.Choice(name="Scissors", value="scissors"),
+    app_commands.Choice(name="Pierre", value="rock"),
+    app_commands.Choice(name="Papier", value="paper"),
+    app_commands.Choice(name="Ciseaux", value="scissors"),
     ])
 async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str]):
     rpslist = ["rock", "paper", "scissors"]
     e = random.choice(rpslist)
-    e = e.replace("rock","Rock ✊").replace("paper","Paper 🤚").replace("scissors","Scissors ✂")
-    await interaction.response.send_message(content=f"{e}")
-    await asyncio.sleep(1)
-    if choix.value == e:
-        await interaction.edit_original_response(content=f"{e}\n\négalité!")
-    if choix.value == "scissors" and e == "paper":
-        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.value == "paper" and e == "rock":
-        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.value == "rock" and e == "scissors":
-        await interaction.edit_original_response(content=f"{e}\n\ntu as gagné!")
-    if choix.value == "paper" and e == "scissors":
-        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
-    if choix.value == "rock" and e == "paper":
-        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
-    if choix.value == "scissors" and e == "rock":
-        await interaction.edit_original_response(content=f"{e}\n\nj'ai gagné!")
+    e = e.replace("rock","Pierre ✊").replace("paper","Papier 🤚").replace("scissors","Ciseaux :v:")
+    content = f"tu as fait {choix.name.replace('Pierre', 'Pierre ✊').replace('Papier', 'papier 🤚').replace('Ciseaux', 'Ciseaux :v:')}\nJ'ai fait {e}"
+    if choix.name.replace('Pierre', 'Pierre ✊').replace('Papier', 'papier 🤚').replace('Ciseaux', 'Ciseaux :v:') == e:
+        await interaction.response.send_message(content=f"{content}\n\négalité!")
+    if choix.value == "scissors" and e == "Papier 🤚":
+        await interaction.response.send_message(content=f"{content}\n\ntu as gagné!")
+    if choix.value == "rock" and e == "Papier 🤚":
+        await interaction.response.send_message(content=f"{content}\n\nj'ai gagné!")
+    if choix.value == "paper" and e == "Pierre ✊":
+        await interaction.response.send_message(content=f"{content}\n\ntu as gagné!")
+    if choix.value == "scissors" and e == "Pierre ✊":
+        await interaction.response.send_message(content=f"{content}\n\nj'ai gagné!")
+    if choix.value == "rock" and e == "Ciseaux :v:":
+        await interaction.response.send_message(content=f"{content}\n\ntu as gagné!")
+    if choix.value == "paper" and e == "Ciseaux :v:":
+        await interaction.response.send_message(content=f"{content}\n\nj'ai gagné!")
 
 @client.tree.context_menu(name="Profil", guild=guild_id1)
 @app_commands.rename(user="Membre")
@@ -268,19 +247,10 @@ class SimpleView(discord.ui.View):
 @app_commands.describe(reason="la raison du ban")
 @app_commands.default_permissions(ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member, reason:Optional[str] = None):
-    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
-        if interaction.user.top_role <= member.top_role: #type: ignore
-            await interaction.response.send_message(f"tu n'as pas la permission de ban {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", ephemeral=True, color=discord.Color.red()) #type: ignore
-        else:
-            await member.ban(reason=reason)
-            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
-            channel = await client.fetch_channel(1130945537907114139)
-            await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") #type: ignore
-    else:
-        await member.ban(reason=reason)
-        await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été ban pour la raison suivante :\n{reason}", ephemeral=True)
-        channel = await client.fetch_channel(1130945537907114139)
-        await channel.send(content=f"{member.mention} a été ban du serveur par {interaction.user.name}") #type: ignore
+    channel = await client.fetch_channel(1130945537907114139)
+    raison = await moderation.banfunct(interaction, member, str(reason))
+    emb = discord.Embed(title="Ban", description=f"{member.mention} [{member.id}] a été banni(e).\n Auteur du banissement :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
+    await channel.send(embed=emb)
 
 #sanctions system
 @client.tree.command(name ="mute", description = "[MODERATION] mute un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
@@ -289,41 +259,14 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
 @app_commands.rename(reason="raison")
 @app_commands.describe(reason="la raison du mute")
 @app_commands.rename(duration="temps")
-@app_commands.describe(duration="Le temps que l'utilisateur doit être mute")
-@app_commands.describe(file="le fichier contenant la preuve de la raison")
-@app_commands.rename(file="fichier")
+@app_commands.describe(duration="Le temps en minutes que l'utilisateur doit être mute")
 @app_commands.default_permissions(moderate_members=True)
-async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason:Optional[str], file: Optional[discord.Attachment]):
+async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason: Optional[str]):
     channel = await client.fetch_channel(1131864743502696588)
-    if not interaction.user.id == member.id:
-        if interaction.user.top_role.position <= member.top_role.position: #type: ignore
-            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal à ton rôle le plus haut.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
-            await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
-        else:
-            if reason == None:
-                await member.timeout(datetime.timedelta(minutes=float(duration)), reason="a surement fait quelque chose qui n'est pas acceptable")
-                await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes", ephemeral=True)
-                emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
-                if file!= None:
-                    emb.add_field(name="preuve de la raison du mute", value=file)
-                await channel.send(embed=emb) #type: ignore
-            else:
-                await member.timeout(datetime.timedelta(seconds=float(duration)), reason=reason)
-                await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute {duration} minutes pour la raison suivante : {reason}", ephemeral=True)
-                emb = discord.Embed(title="Sanction",description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
-                if file!= None:
-                    emb.add_field(name="preuve de la raison du mute", value=file)
-                await channel.send(embed=emb) #type: ignore
-    
-    if interaction.user.id == member.id:
-        await interaction.response.send_message("wtf t'as vraiment pas d'amour propre pour essayer de te mute toi-même ou ca se passe comment ?", ephemeral=True)
-    else :
-        if interaction.user.id == interaction.guild.owner_id : #type: ignore
-            await member.timeout(datetime.timedelta(minutes=float(duration)))
-            await interaction.response.send_message(f"{member.display_name} ({member.id}) a bien été mute pour la raison suivante :\n{reason}", ephemeral=True)
-            emb = discord.Embed(title="Sanction", description=f"{member.mention} a été mute par {interaction.user.mention}", timestamp=datetime.datetime.now(), color=discord.Color.red())
-            emb.set_image(url=file)
-            await channel.send(embed=emb) #type: ignore
+    raison = await moderation.mutefunct(interaction, member, duration, str(reason))
+    emb = discord.Embed(title="Mute", description=f"{member.mention} [{member.id}] a été mute.\n Auteur du mute :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
+    await channel.send(embed=emb)
+
 
 @client.tree.command(name="kick", description="[MODERATION] kick un utilisateur spécifié", guild=guild_id1)
 @app_commands.rename(member="membre")
@@ -331,28 +274,11 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
 @app_commands.rename(reason="raison")
 @app_commands.describe(reason="la raison du kick")
 @app_commands.default_permissions(kick_members=True)
-async def kick(interaction: discord.Interaction, member: discord.Member, reason: Optional[str], file: Optional[discord.Attachment] = None):
-    if not interaction.user.id == interaction.guild.owner_id : #type: ignore
-        if interaction.user.top_role <= member.top_role: #type: ignore
-            emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
-            await interaction.response.send_message(embed=emb, ephemeral=True)
-        else:
-            if reason == None:
-                await member.kick(reason="n'a pas respecté les règles")
-                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
-                channel = await client.fetch_channel(1130945537907114139)
-                await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
-            else:
-                await member.kick(reason=reason)
-                await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
-                channel = await client.fetch_channel(1130945537907114139)
-                await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
-    else:
-        await member.kick(reason=reason)
-        await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick pour la raison suivante :\n{reason}", ephemeral=True)
-        channel = await client.fetch_channel(1130945537907114139)
-        await channel.send(content=f"{member.mention} a été kick du serveur par {interaction.user.name}") #type: ignore
-
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: Optional[str]):
+    channel = await client.fetch_channel(1131864743502696588)
+    raison = await moderation.kickfunct(interaction, member, str(reason))
+    emb = discord.Embed(title="Mute", description=f"{member.mention} [{member.id}] a été kick.\n Auteur du kick :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
+    await channel.send(embed=emb)
 
 async def text_autocomplete(interaction: discord.Interaction, current: str):
     randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
@@ -453,27 +379,27 @@ async def sync(interaction: discord.Interaction):
     app_commands.Choice(name="Manette", value="controller"),
     app_commands.Choice(name="Clavier-souris", value="keyboard"),
     app_commands.Choice(name="Tactile", value="touch"),
+    app_commands.Choice(name="Tous", value="all"),
     ])
-@app_commands.describe(support="support de jeu recherché (laisser vide si tu veux tout)")
+@app_commands.describe(support="support de jeu recherché")
 @app_commands.describe(pseudo="le pseudo de l'utilisateur")
-async def fninfo(interaction: discord.Interaction, pseudo: str, support: Optional[app_commands.Choice[str]]):
+async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_commands.Choice[str]):
     try:
         e = await fnapi.stats.fetch_by_name(name=pseudo) # type: ignore
-    except errors.Forbidden as unauthorized:
-        emb = discord.Embed(title=f"Erreur", description=unauthorized, color=discord.Color.orange())
-        emb.set_thumbnail(url=f"{interaction.user.avatar}") #type: ignore
+    except errors.NotFound as NotFound:
+        emb = discord.Embed(title=f"Erreur", description=NotFound, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
-    except errors.NotFound as notfound:
-        emb = discord.Embed(title=f"Erreur", description=notfound, color=discord.Color.orange())
-        emb.set_thumbnail(url=f"{interaction.user.avatar}") #type: ignore
+    except errors.Forbidden as Forbidden:
+        emb = discord.Embed(title=f"Erreur", description=Forbidden, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
     else:
-        emb = discord.Embed(title=f"Profil Fortnite de {e.user}", color=discord.Color.blue())
+        emb = discord.Embed(title=f"Profil Fortnite de {e.user.name}", color=discord.Color.blue())
         emb.set_thumbnail(url=f"{interaction.user.avatar}") #type: ignore
+        emb.set_author(name=e.user.name, icon_url=e.image_url)
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
-        if support.value == None:
+        if support.value == "all":
             emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills} kills\nDuo: {e.stats.all.duo.kills} kills\nSquad: {e.stats.all.squad.kills} kills") # type: ignore
         if support.value == "controller":
             emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.gamepad.solo.kills} kills\nDuo: {e.stats.gamepad.duo.kills} kills\nSquad: {e.stats.gamepad.squad.kills} kills") # type: ignore
@@ -486,10 +412,10 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: Optiona
 
 @client.tree.command(name="brawlstars_info", description="obtenir des infos sur un compte Brawl Stars", guild=guild_id1)
 @app_commands.describe(uid="l'identifiant de l'utilisateur")
-async def gameinfo(interaction: discord.Interaction, uid: str):
+async def bsinfo(interaction: discord.Interaction, uid: str):
         bsclient = brst.Client(token=BS_TOKEN, is_async=True)
         bstag = uid.casefold().replace("#", "") # casefold rend insensible à la casse
-        player = await bsclient.get_profile(bstag)
+        player = await bsclient.get_player(bstag)
         club = await player.get_club()
         hexcolorlist = ["0xffa2e3fe","0xffffffff","0xff4ddba2","0xffff9727","0xfff9775d","0xfff05637","0xfff9c908","0xffffce89","0xffa8e132","0xff1ba5f5","0xffff8afb","0xffcb5aff"]
         namecolorlist = [discord.Color.blue(), discord.Color.light_embed(), discord.Color.dark_green(), discord.Color.orange(), discord.Color.red(),discord.Color.dark_red(),discord.Color.yellow(),discord.Color.default(),discord.Color.green(),discord.Color.dark_blue(),discord.Color.pink(),discord.Color.purple()]
@@ -625,30 +551,29 @@ class UnbanModal(discord.ui.Modal, title="Formulaire de débanissement"):
 class unbanreqview(discord.ui.View):
     def __init__(self):
         super().__init__()
-    async def on_timeout(self) -> None:
-    # Step 2
-        self.clear_items()
-        await self.message.edit(view=self)
+
     guild = client.get_guild(1130945537181499542)
     unbanchat = client.get_channel(1130945538406240399)
     @discord.ui.button(label="Oui", style=discord.ButtonStyle.green)
-    async def on_click1(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def on_click(self, interaction: discord.Interaction, button: discord.ui.Button):
+        unbanchat = client.get_channel(1130945538406240399)
+        guild = client.get_guild(1130945537181499542)
         emb = discord.Embed(title="Demande d'unban", description=f"{interaction.user.name, f' ({interaction.user.id})'} a envoyé une demande d'unban", timestamp=datetime.datetime.now(), color=discord.Color.green())
-        emb.set_author(name=f"{self.guild.name}", url=self.guild.icon)
+        emb.set_author(name=f"{guild.name}", url=guild.icon)
         emb.set_thumbnail(url=interaction.user.avatar)
         emb.set_footer(text=client.user, icon_url=client.user.avatar)
-        self.clear_items()
-        msg = await self.unbanchat.send(embed=emb)
+        msg = await unbanchat.send(embed=emb)
         reactlist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
         for i in range(len(reactlist)):
             await msg.add_reaction(reactlist[i])
-        await self.message.edit(view=self)
+        self.clear_items()
+        await interaction.message.edit(view=self)
 
     @discord.ui.button(label="Non", style=discord.ButtonStyle.red)
     async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message("Ok")
         self.clear_items()
-        await self.message.edit(view=self)
+        await interaction.message.edit(view=self)
 
 last_command_time = None
 @client.tree.command(name="unban_request")
@@ -656,15 +581,15 @@ async def ban_appeal(interaction: discord.Interaction):
         guild = client.get_guild(1130945537181499542)
         global last_command_time
         # Vérifiez si last_command_time est défini et si assez de temps s'est écoulé (une semaine ici)
-        if last_command_time is None or (datetime.datetime.now() - last_command_time) > datetime.timedelta(weeks=1):
+        if last_command_time is None or (datetime.datetime.now() - last_command_time) > datetime.timedelta(hours=2):
                 try:
                     await guild.fetch_ban(discord.Object(interaction.user.id))
                 except discord.errors.NotFound:
-                    await interaction.response.send_message("tu n'es pas banni de La Boulangerie", ephemeral=True)
+                    await interaction.response.send_message("tu n'es pas banni de La Boulangerie débilus")
                 else:
                     e = await guild.fetch_ban(discord.Object(interaction.user.id))                
             # Exécutez la commande
-                    await interaction.response.send_message(f"Tu as été banni pour cette raison : ``{e.reason}``\n\nSouhaite-tu envoyer une demande de débanissement au staff ?", view=unbanreqview())
+                    await interaction.response.send_message(f"Tu as été banni pour cette raison : ``{e.reason}``\n\nSouhaite-tu envoyer une demande de débanissement au staff ?", view=unbanreqview(), ephemeral=True)
             # Mettez à jour last_command_time avec la date actuelle
                 last_command_time = datetime.datetime.now()
         else:
@@ -677,7 +602,6 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
     msg = message
     await interaction.response.send_modal(say(msg))
     await interaction.channel.typing()
-
 
 # async def colorautocomplete(interaction: discord.Interaction, current: str):
 #     colorlist = ["0x3498DB"]
@@ -705,7 +629,7 @@ async def on_message_edit(before, after):
     else:
         if before.guild.id == 1130945537181499542:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
-            emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
+            emb.set_author(name="Message modifié", icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
             emb.add_field(name="avant", value=before.content, inline=True)
             emb.add_field(name="après", value=f"{after.content}\n\n{after.jump_url}", inline=True)
             emb.set_thumbnail(url=after.author.display_avatar)
@@ -761,11 +685,6 @@ async def on_message_delete(message: discord.Message):
         else:
             return
 
-@client.event
-async def on_member_unban(guild: discord.Guild, user: discord.Member):
-    await user.send(f"tu as été débanni de {guild.name}. enjoy !")
-
-
 ## module de message de bienvenue
 @client.event
 async def on_member_join(member: discord.Member):
@@ -783,8 +702,7 @@ async def on_member_join(member: discord.Member):
         width, height = image.size
         circle_radius = min(width, height) // 2
         circle_center = (width // 2, height // 2)
-        draw.ellipse((circle_center[0] - circle_radius, circle_center[1] - circle_radius,
-                      circle_center[0] + circle_radius, circle_center[1] + circle_radius), fill=255)
+        draw.ellipse((circle_center[0] - circle_radius, circle_center[1] - circle_radius, circle_center[0] + circle_radius, circle_center[1] + circle_radius), fill=255)
 
         # Convertir le masque en image "RGBA" avec un canal alpha
         mask = mask.convert("L")
@@ -813,11 +731,11 @@ async def on_member_join(member: discord.Member):
         draw = ImageDraw.Draw(background_image)
 
         # Charger une police (assurez-vous d'avoir une police TTF installée)
-        font = ImageFont.truetype("src/font/ComicSans.ttf", 28)  # Remplacez le chemin et la taille
+        font = ImageFont.truetype("src/font/ComicSans.ttf", 28) # Remplacez le chemin et la taille
 
         # Obtenez le nom du membre à partir de discord.py (remplacez member_obj par l'objet de membre réel)
 
-        member_name = f"Bienvenue sur le serveur {member.name} !"
+        member_name = f"Bienvenue sur le serveur {member.display_name} !"
 
         # Position pour afficher le texte (ajustez selon vos besoins)
         text_position = (60, 450)
@@ -839,7 +757,7 @@ async def on_member_join(member: discord.Member):
         msg = await LBchannel.send(content=f"{member.mention}", file=file, silent=True)
         await msg.add_reaction("<:LBgigachad:1134177726585122857>")
 
-        rolelist = [1151548927942860872, 1151549497399324732, 1151549661765709894, 1151549293749075979, 1151554619265265816] # dans l'ordre : GNP, PINGS, LEVEL, JEUX, AUTRES
+        rolelist = [1151548927942860872, 1151549497399324732, 1151549661765709894, 1151549293749075979, 1151554619265265816, 1130945537194078317] # dans l'ordre : GNP, PINGS, LEVEL, JEUX, AUTRES, petits pains
         clearcount = len([x for x in member.guild.members if not x.bot])
         await statchannel.edit(name=f"Utilisateurs : {clearcount}")
         os.remove("src/img/buffer/bienvenue.png")
@@ -863,13 +781,13 @@ async def on_member_remove(member: discord.Member):
     statchannel = client.get_channel(1163733415229669376)
 
     if member.guild == LBchannel.guild:
+        clearcount = len([x for x in member.guild.members if not x.bot])
+        await statchannel.edit(name=f"Utilisateurs : {clearcount}")
         emb=discord.Embed(title="Au revoir!", description=f"Notre confrère pain {member.name} vient de brûler... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
-        emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"{client.user.id}")
+        emb.set_author(name=member.guild.name, icon_url=member.guild.icon)
         emb.set_footer(text=client.user, icon_url=client.user.avatar)
         msg = await LBchannel.send(content=f"{member.mention}", embed=emb, silent=True) # type: ignore
         await msg.add_reaction("<:LBroger:1136059237441749132>")
-        clearcount = len([x for x in member.guild.members if not x.bot])
-        await statchannel.edit(name=f"Utilisateurs : {clearcount}")
 
     if member.guild == Kchannel.guild:
         emb=discord.Embed(title="Au revoir!", description=f"Notre confrère horny {member.name} vient de nous quitter... Nous lui faisons nos plus sincères adieux. :saluting_face:", color = discord.Color.red(), timestamp=datetime.datetime.now())
@@ -1054,22 +972,23 @@ async def on_ready():
     try:
         # Récupère l'émoji.
         # emojiID correspond à l'ID de l'émoji en question.
-        emojiIDlist = [1136229377399603210,
-                       1163003539715534929,
-                       1138549194550952048,
-                       1136234211976695888,
-                       1136241845899374722,
-                       1136247065291268147,
-                       1136241241781186632,
-                       1139089457086210118,
-                       1136242676195406015,
-                       1136229172935659640,
-                       1136232472418455622,
-                       1136236032455606364,
-                       1136232168402735234,
-                       1136234618417328218,
-                       1136233292899819532
-                       ]
+        emojiIDlist =[
+            1136229377399603210,
+            1163003539715534929,
+            1138549194550952048,
+            1136234211976695888,
+            1136241845899374722,
+            1136247065291268147,
+            1136241241781186632,
+            1139089457086210118,
+            1136242676195406015,
+            1136229172935659640,
+            1136232472418455622,
+            1136236032455606364,
+            1136232168402735234,
+            1136234618417328218,
+            1136233292899819532
+            ]
         
         # guildID correspond à l'ID du serveur où se trouve l'émoji.
         guild = await client.fetch_guild(guild_id)
@@ -1082,7 +1001,7 @@ async def on_ready():
 
         # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
         for i in range(len(emojiIDlist)):
-            e = await guild.fetch_emoji(emojiIDlist[i])
+            e = discord.Object(emojiIDlist[i], type=discord.Emoji)
             await e.edit(roles=[discord.Object(staffrole), discord.Object(botrole), discord.Object(devrole)])
     except discord.errors.Forbidden and discord.errors.HTTPException as e:
         print(e)
