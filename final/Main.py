@@ -3,7 +3,7 @@ import os, sys
 import datetime
 import random
 from dotenv import load_dotenv
-from typing import Optional
+from typing import List, Optional
 from io import BytesIO
 import asyncio
 from collections import * #type: ignore
@@ -15,12 +15,14 @@ from discord import app_commands, Team, ui
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
+from requests import request
 import moderation
 
 #Import des API
 import unbelipy as unb
 import blagues_api as bl
 import brawlstats as brst
+import other_functions
 import enkanetwork as enk
 import fortnite_api as ftn
 from fortnite_api import errors
@@ -215,7 +217,7 @@ async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str])
     if choix.value == "paper" and e == "Ciseaux :v:":
         await interaction.response.send_message(content=f"{content}\n\nj'ai gagné!")
 
-@client.tree.context_menu(name="Profil", guild=guild_id1)
+@client.tree.context_menu(name="Profil")
 @app_commands.rename(user="Membre")
 async def profil(interaction: discord.Interaction, user: discord.Member):
     # Remove unnecessary characters
@@ -287,7 +289,7 @@ async def text_autocomplete(interaction: discord.Interaction, current: str):
         for i in randresponse
     ]
 
-@client.tree.command(name="summon", description="permet d'invoquer un utilisateur", guild=guild_id1)
+@client.tree.command(name="summon", description="permet d'invoquer un utilisateur")
 @app_commands.autocomplete(phrase=text_autocomplete)
 @app_commands.describe(phrase="le texte que tu veux que l'invocation dise", user="l'utilisateur que tu veux invoquer")
 async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str]):
@@ -365,6 +367,27 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await asyncio.sleep(5)
             await webhookcreate.delete()
 
+@client.tree.command(name="blague_random", description="test")
+async def randjoke(interaction: discord.Interaction):
+    blague = await blclient.random()
+    emb = discord.Embed(title="Blague Random 🎲", description=f"{blague.joke}\n\n||{blague.answer}||")
+    await interaction.response.send_message(embed=emb, ephemeral=True)
+
+async def blague_autocomplete(interaction: discord.Interaction, current: str):
+    randresponse = ['GLOBAL', 'DEV', 'DARK', 'LIMIT', 'BEAUF', 'BLONDES']
+
+    return [
+        app_commands.Choice(name=i, value=i)
+        for i in randresponse
+    ]
+
+@client.tree.command(name="blague", description="envoie une blague d'un type spécifié")
+@app_commands.autocomplete(choix=blague_autocomplete)
+async def joke(interaction: discord.Interaction, choix: str):
+    blague = await blclient.random_categorized(choix.casefold())
+    emb = discord.Embed(title=f"Blague Random {choix}", description=f"{blague.joke}\n\n||{blague.answer}||")
+    await interaction.response.send_message(embed=emb, ephemeral=True)
+
 @client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
 @app_commands.default_permissions(manage_guild=True)
 async def sync(interaction: discord.Interaction):
@@ -374,7 +397,7 @@ async def sync(interaction: discord.Interaction):
     await asyncio.sleep(2)
     await interaction.delete_original_response()
 
-@client.tree.command(name="fortnite_profil", description="obtenir des infos sur un compte Fortnite", guild=guild_id1)
+@client.tree.command(name="fortnite_profil", description="obtenir des infos sur un compte Fortnite")
 @app_commands.choices(support=[
     app_commands.Choice(name="Manette", value="controller"),
     app_commands.Choice(name="Clavier-souris", value="keyboard"),
@@ -400,40 +423,51 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
         emb.set_author(name=e.user.name, icon_url=e.image_url)
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         if support.value == "all":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills} kills\nDuo: {e.stats.all.duo.kills} kills\nSquad: {e.stats.all.squad.kills} kills") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.all.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.all.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
         if support.value == "controller":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.gamepad.solo.kills} kills\nDuo: {e.stats.gamepad.duo.kills} kills\nSquad: {e.stats.gamepad.squad.kills} kills") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.gamepad.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.gamepad.duo.kills} kills\nSquad: {e.stats.gamepad.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
         if support.value == "keyboard":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.keyboard_mouse.solo.kills} kills\nDuo: {e.stats.keyboard_mouse.duo.kills} kills\nSquad: {e.stats.keyboard_mouse.squad.kills} kills") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.keyboard_mouse.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.keyboard_mouse.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.keyboard_mouse.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
         if support.value == "touch":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.touch.solo.kills} kills\nDuo: {e.stats.touch.duo.kills} kills\nSquad: {e.stats.touch.squad.kills} kills") # type: ignore
-
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.touch.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.touch.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.touch.squad.kills} kills <:FortniteCrosshair:1169734856884887632>")
+        
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
 
-@client.tree.command(name="brawlstars_info", description="obtenir des infos sur un compte Brawl Stars", guild=guild_id1)
-@app_commands.describe(uid="l'identifiant de l'utilisateur")
-async def bsinfo(interaction: discord.Interaction, uid: str):
-        bsclient = brst.Client(token=BS_TOKEN, is_async=True)
-        bstag = uid.casefold().replace("#", "") # casefold rend insensible à la casse
-        player = await bsclient.get_player(bstag)
-        club = await player.get_club()
-        hexcolorlist = ["0xffa2e3fe","0xffffffff","0xff4ddba2","0xffff9727","0xfff9775d","0xfff05637","0xfff9c908","0xffffce89","0xffa8e132","0xff1ba5f5","0xffff8afb","0xffcb5aff"]
-        namecolorlist = [discord.Color.blue(), discord.Color.light_embed(), discord.Color.dark_green(), discord.Color.orange(), discord.Color.red(),discord.Color.dark_red(),discord.Color.yellow(),discord.Color.default(),discord.Color.green(),discord.Color.dark_blue(),discord.Color.pink(),discord.Color.purple()]
-        
-        i = 0
-        while not player.name_color == hexcolorlist[i]:
-            i = i + 1
-        playcolor = namecolorlist[i]
+@client.tree.command(name="brawlstars_profil", description="obtenir des infos sur un compte Brawl Stars", guild=guild_id1)
+@app_commands.describe(tag="l'identifiant de l'utilisateur")
+async def bsinfo(interaction: discord.Interaction, tag: str):
 
-        if club == None:  # Player n'a pas de club?
-            e = "Aucun"
-        else:
-            e = [club.name, '(', club.tag, ')']
+    bs_token = os.getenv("bs_api_token")
+    bsclient = brst.Client(token=bs_token, is_async=True)
 
-        playeremb = discord.Embed(title=f"**Profil de {player.name}**", description=f"**Tag:** {player.tag}\n\n<:bstrophy:1141793310055350353> **Trophées:** {player.trophies}\n<:bstrophy:1141793310055350353> **Record Personel:** {player.highest_trophies}\n\n<:club:1143949868147154944> **Club:** {e})\n\n**Victoires en Showdown:**\n<:showdown:1142850368276025374> {player.solo_victories} <:duo_showdown:1142851071740485683> {player.duo_victories}\n\n**Victoires en 3v3:** \n<:3v3:1142851875503341618> {player.x3vs3_victories}\n\n **Brawlers:** {len(player.brawlers)}/70", color=playcolor)
-        icon_class = str(player.icon).replace("{'id': ","https://cdn-old.brawlify.com/profile/").replace("}",".png")
-        playeremb.set_thumbnail(url = icon_class)
-        await interaction.response.send_message(embed=playeremb, ephemeral=True)
+    bstag = tag.upper().replace("#", "")
+    player = await bsclient.get_player(bstag)
+    club = await player.get_club()
+
+    hexcolorlist = ["0xffa2e3fe","0xffffffff","0xff4ddba2","0xffff9727","0xfff9775d","0xfff05637","0xfff9c908","0xffffce89","0xffa8e132","0xff1ba5f5","0xffff8afb","0xffcb5aff"]
+    namecolorlist = [discord.Color.blue(), discord.Color.light_embed(), discord.Color.dark_green(), discord.Color.orange(), discord.Color.red(), discord.Color.dark_red(), discord.Color.yellow(), discord.Color.default(), discord.Color.green(), discord.Color.dark_blue(), discord.Color.pink(), discord.Color.purple()]
+
+    i = 0
+
+    while not player.name_color == hexcolorlist[i]:
+        i = i + 1
+
+    playcolor = namecolorlist[i]
+    a = await other_functions.brawlerlist()    
+    if club == None:  # Player n'a pas de club?
+
+        playeremb = discord.Embed(title=f"**Profil de {player.name}**", description=f"**Tag:** {player.tag}\n\n<:bstrophy:1141793310055350353> **Trophées:** ``{player.trophies}``\n<:bstrophy:1141793310055350353> **Record Personel:** {player.highest_trophies}\n\n<:club:1169755350925320213> **Club:** Aucun\n\n**Victoires en Showdown:**\n<:showdown:1169755353748099102> {player.solo_victories} <:duo_showdown:1169755356155625543> {player.duo_victories}\n\n**Victoires en 3v3:** \n<:3v3:1169756786404901015> {player.x3vs3_victories}\n\n **Brawlers:** {len(player.brawlers)}/{a}", color=playcolor)
+    else:
+        playeremb = discord.Embed(title=f"**Profil de {player.name}**", description=f"**Tag:** {player.tag}\n\n<:bstrophy:1141793310055350353> **Trophées:** {player.trophies}\n<:bstrophy:1141793310055350353> **Record Personel:** {player.highest_trophies}\n\n<:club:1169755350925320213> **Club:** {club.name} ({club.tag})\n\n**Victoires en Showdown:**\n<:showdown:1169755353748099102> {player.solo_victories} <:duo_showdown:1169755356155625543> {player.duo_victories}\n\n**Victoires en 3v3:** \n<:3v3:1169756786404901015> {player.x3vs3_victories}\n\n **Brawlers:** {len(player.brawlers)}/{a}", color=playcolor)
+    
+    
+    icon_class = str(player.icon).replace("{'id': ","https://cdn-old.brawlify.com/profile/").replace("}",".png")
+
+    playeremb.set_thumbnail(url=icon_class)
+    playeremb.set_image(url=f"https://share.brawlify.com/player/{tag}")
+
+    await interaction.response.send_message(embed=playeremb)
+    await bsclient.close()
 
 @client.tree.command(name="genshin_profil", description="obtenir des infos sur un compte Genshin Impact", guild=guild_id1)
 @app_commands.describe(uid="le pseudo ou identifiant de l'utilisateur")
@@ -630,8 +664,8 @@ async def on_message_edit(before, after):
         if before.guild.id == 1130945537181499542:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié", icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
-            emb.add_field(name="avant", value=before.content, inline=True)
-            emb.add_field(name="après", value=f"{after.content}\n\n{after.jump_url}", inline=True)
+            emb.add_field(name="avant", value=f"{before.content}\n\n{after.jump_url}", inline=True)
+            emb.add_field(name="après", value=f"{after.content}", inline=True)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
             webfetch = await client.fetch_channel(1131864743502696588)
@@ -640,8 +674,8 @@ async def on_message_edit(before, after):
         if before.guild.id == 1130798906586959946:
             emb = discord.Embed(description=f"**{after.author.display_name}** a édité son message:", timestamp=datetime.datetime.now())
             emb.set_author(name="Message modifié",icon_url="https://cdn.discordapp.com/attachments/1139849206308278364/1142035263590236261/DiscordEdited.png")
-            emb.add_field(name="avant", value=before.content, inline=True)
-            emb.add_field(name="après", value=f"{after.content}\n\n{after.jump_url}", inline=True)
+            emb.add_field(name="avant", value=f"{before.content}\n\n{after.jump_url}", inline=True)
+            emb.add_field(name="après", value=f"{after.content}", inline=True)
             emb.set_thumbnail(url=after.author.display_avatar)
             emb.set_footer(text=client.user, icon_url=client.user.avatar)
             webfetch = await client.fetch_channel(1141995718228324482)
