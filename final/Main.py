@@ -11,7 +11,7 @@ from collections import * #type: ignore
 #Import de discord et modules discord
 import discord
 import discord.ext.commands
-from discord import app_commands, Team, ui
+from discord import ButtonStyle, app_commands, Team, ui
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
@@ -30,6 +30,9 @@ from rule34Py import rule34Py
 
 #Import de PIL
 from PIL import Image, ImageDraw, ImageFont
+
+#Import de win10toast
+from win10toast import ToastNotifier
 
 #paramètres
 
@@ -242,16 +245,16 @@ class SimpleView(discord.ui.View):
 
 #sanctions system
 
-@client.tree.command(name ="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@client.tree.command(name="ban", description = "[MODERATION][BETA] bannit un utilisateur spécifié", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.rename(member="membre")
 @app_commands.describe(member="l'utilisateur à ban")
 @app_commands.rename(reason="raison")
 @app_commands.describe(reason="la raison du ban")
 @app_commands.default_permissions(ban_members=True)
-async def ban(interaction: discord.Interaction, member: discord.Member, reason:Optional[str] = None):
+async def ban(interaction: discord.Interaction, member: discord.Member, reason: Optional[str] = None):
     channel = await client.fetch_channel(1130945537907114139)
     raison = await moderation.banfunct(interaction, member, str(reason))
-    emb = discord.Embed(title="Ban", description=f"{member.mention} [{member.id}] a été banni(e).\n Auteur du banissement :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
+    emb = discord.Embed(title="Ban", description=f"{member.mention} [{member.id}] a été banni(e).\n Auteur du banissement :{interaction.user.mention} [{interaction.user.id}]\nRaison : {reason}")
     await channel.send(embed=emb)
 
 #sanctions system
@@ -263,7 +266,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason:O
 @app_commands.rename(duration="temps")
 @app_commands.describe(duration="Le temps en minutes que l'utilisateur doit être mute")
 @app_commands.default_permissions(moderate_members=True)
-async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason: Optional[str]):
+async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, reason: Optional[str] = None):
     channel = await client.fetch_channel(1131864743502696588)
     raison = await moderation.mutefunct(interaction, member, duration, str(reason))
     emb = discord.Embed(title="Mute", description=f"{member.mention} [{member.id}] a été mute.\n Auteur du mute :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
@@ -276,7 +279,7 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
 @app_commands.rename(reason="raison")
 @app_commands.describe(reason="la raison du kick")
 @app_commands.default_permissions(kick_members=True)
-async def kick(interaction: discord.Interaction, member: discord.Member, reason: Optional[str]):
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: Optional[str] = None):
     channel = await client.fetch_channel(1131864743502696588)
     raison = await moderation.kickfunct(interaction, member, str(reason))
     emb = discord.Embed(title="Mute", description=f"{member.mention} [{member.id}] a été kick.\n Auteur du kick :{interaction.user.mention} [{interaction.user.id}]\nRaison : {raison}")
@@ -292,7 +295,7 @@ async def text_autocomplete(interaction: discord.Interaction, current: str):
 @client.tree.command(name="summon", description="permet d'invoquer un utilisateur")
 @app_commands.autocomplete(phrase=text_autocomplete)
 @app_commands.describe(phrase="le texte que tu veux que l'invocation dise", user="l'utilisateur que tu veux invoquer")
-async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str]):
+async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str] = None):
     pdp = await user.avatar.read()
     troll = await interaction.channel.create_webhook(name=user.display_name, avatar=pdp)
     
@@ -314,7 +317,7 @@ async def summon(interaction: discord.Interaction, user: discord.Member, phrase:
         await asyncio.sleep(2)
         await troll.delete()
 
-@client.tree.command(name="webhook", description="envoie un message via un webhook", guild=guild_id1)
+@client.tree.command(name="webhook", description="envoie un message via un webhook")
 @app_commands.default_permissions(manage_guild=True)
 @app_commands.describe(texte=f"ce que tu veux que le webhook dise")
 @app_commands.describe(nom="le nom du webhook")
@@ -410,10 +413,20 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
     try:
         e = await fnapi.stats.fetch_by_name(name=pseudo) # type: ignore
     except errors.NotFound as NotFound:
+        # Créer un objet ToastNotifier
+        toaster = ToastNotifier()
+
+        # Afficher une notification
+        toaster.show_toast("Bread Chan : Erreur", f"{NotFound}")
         emb = discord.Embed(title=f"Erreur", description=NotFound, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
     except errors.Forbidden as Forbidden:
+        # Créer un objet ToastNotifier
+        toaster = ToastNotifier()
+
+        # Afficher une notification
+        toaster.show_toast("Bread Chan : Erreur", f"{Forbidden}")
         emb = discord.Embed(title=f"Erreur", description=Forbidden, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
@@ -433,7 +446,7 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
         
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
 
-@client.tree.command(name="brawlstars_profil", description="obtenir des infos sur un compte Brawl Stars", guild=guild_id1)
+@client.tree.command(name="brawlstars_profil", description="obtenir des infos sur un compte Brawl Stars")
 @app_commands.describe(tag="l'identifiant de l'utilisateur")
 async def bsinfo(interaction: discord.Interaction, tag: str):
 
@@ -441,8 +454,8 @@ async def bsinfo(interaction: discord.Interaction, tag: str):
     bsclient = brst.Client(token=bs_token, is_async=True)
 
     bstag = tag.upper().replace("#", "")
-    player = await bsclient.get_player(bstag)
-    club = await player.get_club()
+    player = bsclient.get_player(bstag)
+    club = player.get_club()
 
     hexcolorlist = ["0xffa2e3fe","0xffffffff","0xff4ddba2","0xffff9727","0xfff9775d","0xfff05637","0xfff9c908","0xffffce89","0xffa8e132","0xff1ba5f5","0xffff8afb","0xffcb5aff"]
     namecolorlist = [discord.Color.blue(), discord.Color.light_embed(), discord.Color.dark_green(), discord.Color.orange(), discord.Color.red(), discord.Color.dark_red(), discord.Color.yellow(), discord.Color.default(), discord.Color.green(), discord.Color.dark_blue(), discord.Color.pink(), discord.Color.purple()]
@@ -451,7 +464,7 @@ async def bsinfo(interaction: discord.Interaction, tag: str):
 
     while not player.name_color == hexcolorlist[i]:
         i = i + 1
-
+    
     playcolor = namecolorlist[i]
     a = await other_functions.brawlerlist()    
     if club == None:  # Player n'a pas de club?
@@ -469,7 +482,7 @@ async def bsinfo(interaction: discord.Interaction, tag: str):
     await interaction.response.send_message(embed=playeremb)
     await bsclient.close()
 
-@client.tree.command(name="genshin_profil", description="obtenir des infos sur un compte Genshin Impact", guild=guild_id1)
+@client.tree.command(name="genshin_profil", description="obtenir des infos sur un compte Genshin Impact")
 @app_commands.describe(uid="le pseudo ou identifiant de l'utilisateur")
 async def genshininfo(interaction: discord.Interaction, uid: str):
         try: 
@@ -514,18 +527,59 @@ class DropdownView(discord.ui.View):
         self.data = data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
-#report system
 
-@client.tree.command(name="rand_r34", guild=guild_id1, nsfw=True)
-async def r34(interaction: discord.Interaction, tag1: str, tag2: Optional[str], tag3: Optional[str], tag4: Optional[str], tag5: Optional[str]):
-    cul = r34py.random_post(tags=[tag1, tag2, tag3, tag4, tag5])
+@client.tree.command(name="r34", description="cherche une video ou image sur Rule34", nsfw=True)
+@app_commands.choices(choix=[
+    app_commands.Choice(name="Image", value="image"),
+    app_commands.Choice(name="Vidéo", value="video")
+])
+@app_commands.describe(choix="le type de media")
+async def r34(interaction: discord.Interaction, choix: app_commands.Choice[str], tag1: str, tag2: Optional[str], tag3: Optional[str], tag4: Optional[str], tag5: Optional[str]):
+    #original list
+    taglist = [choix.value, tag1, tag2, tag3, tag4, tag5]
+
+    #sublist created with list comprehension
+    #define new sublist that doesn't contain None
+    taglist_updated = [value for value in taglist if value != None]
+
+
+    cul = r34py.random_post(tags=taglist_updated)
     try:
-        r34py.random_post(tags=[tag1, tag2, tag3, tag4, tag5])
-    except Exception as e:
+        r34py.random_post(tags=taglist_updated)
+    except TypeError as e:
         await interaction.response.send_message(content=e, ephemeral=True)
     else:
-        await interaction.response.send_message(content=cul.image, ephemeral=True)
+        base_url = "https://rule34.xxx/index.php?page=post&s=view&id="
+        if 'video' in str(taglist):
+            await interaction.response.send_message(content=f"``{str(taglist_updated).replace('[', '').replace(']', '')}``\n\n{cul.video}", ephemeral=True, view=r34view(base_url + str(cul.id), tags=taglist_updated))
+        else:        
+            await interaction.response.send_message(content=f"``{str(taglist_updated).replace('[', '').replace(']', '')}``\n\n{cul.image}", ephemeral=True, view=r34view(base_url + str(cul.id), tags=taglist_updated))
 
+class r34view(discord.ui.View):
+    def __init__(self, url: str, tags: list[str]):
+        self.tags = tags
+        super().__init__(timeout=None)
+        self.add_item(ui.Button(label="Source", style=ButtonStyle.url, url=url))
+
+
+    @ui.button(label="une autre", style=discord.ButtonStyle.blurple, emoji="🔄")
+    async def on_click2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        base_url = "https://rule34.xxx/index.php?page=post&s=view&id="
+
+        cul = r34py.random_post(tags=self.tags)
+        try:
+            r34py.random_post(tags=self.tags)
+        except TypeError as e:
+            await interaction.response.send_message(content=e, ephemeral=True)
+        except discord.errors.NotFound as e:
+            await interaction.response.send_message(content=e, ephemeral=True)
+        else:
+            if 'video' in str(self.tags):
+                await interaction.edit_original_response(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.video}", view=r34view(base_url + str(cul.id), tags=self.tags))
+            else:        
+                await interaction.edit_original_response(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.image}", view=r34view(base_url + str(cul.id), tags=self.tags))
+
+#report system
 #def modal
 class ReportModal(discord.ui.Modal, title="signalement"):
     def __init__(self, msg):
@@ -536,7 +590,7 @@ class ReportModal(discord.ui.Modal, title="signalement"):
     async def on_submit(self, interaction: discord.Interaction):
         textinput = self.textinput
         chat = await client.fetch_channel(1130945538406240405)
-        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : {self.msg.content}\n\n\n [aller au message]({self.msg.jump_url})", color = discord.Color.green(), timestamp=datetime.datetime.now())
+        emb=discord.Embed(title="signalement", description=f"{interaction.user.display_name} vient de créer un signalement :\n\nMembre signalé : {self.msg.author.display_name}\n\nRaison : {textinput}\n\nPreuve : ``{self.msg.content}\n\n\n{self.msg.jump_url}", color = discord.Color.green(), timestamp=datetime.datetime.now())
         emb.set_author(name=f"{client.user}", url=f"https://discordapp.com/users/{client.user.id}", icon_url=client.user.avatar)
         emb.set_image(url=self.msg.attachment[0].url)
         emb.set_thumbnail(url=f"{interaction.user.avatar}") # type: ignore
@@ -566,8 +620,7 @@ class say(ui.Modal, title="contenu du reply"):
             await interaction.response.send_message(content="ton message a bien été envoyé", ephemeral=True)
 
 class UnbanModal(discord.ui.Modal, title="Formulaire de débanissement"):
-    def __init__(self, msg):
-        self.msg = msg
+    def __init__(self):
         super().__init__()
     textinput = discord.ui.TextInput(label="Pourquoi devrait-tu être unban ?", min_length=100, style=discord.TextStyle.paragraph)
 

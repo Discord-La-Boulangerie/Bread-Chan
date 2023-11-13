@@ -29,7 +29,9 @@ footer div a {
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+  background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
+  background-size: cover; /* Ajuste la taille de l'image pour couvrir tout le bloc */
+  background-position: center; /* Centre l'image dans le bloc */
   margin: 0;
 }
 

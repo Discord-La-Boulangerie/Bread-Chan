@@ -7,18 +7,18 @@ async def banfunct(interaction: discord.Interaction, member: discord.Member, rea
         emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de ban {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal à ton rôle le plus haut.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
         await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
     else:
-        if reason == None:
-            reason = interaction.user.name + " | a sûrement fait quelque chose d'inacceptable"
-            return reason    
         varmonth = datetime.datetime.now() + datetime.timedelta(days=30)
         timestamp = round(varmonth.timestamp())
         await member.send(f"tu as été banni de {interaction.guild.name} pour cette raison : ``{reason}``. tu pourras faire une demande de débanissement le <t:{timestamp}:D>", silent=True)
-        await member.ban(reason=interaction.user.name + f"| {reason}")
-
+        if reason == None:
+            reason = interaction.user.name + " | a sûrement fait quelque chose d'inacceptable"
+            await member.ban(reason=reason)
+        else:
+            reason = interaction.user.name + " | a sûrement fait quelque chose d'inacceptable"
+            await member.ban(reason=reason)
 
 async def mutefunct(interaction: discord.Interaction, member: discord.Member, duration: int, reason: str):
     trueduration = datetime.timedelta(minutes=float(duration))
-    await member.send(f"tu as été mute {duration} minutes pour la raison suivante : {reason}")
     if interaction.user.id == member.id:
         await interaction.response.send_message("wtf t'as vraiment pas d'amour propre pour essayer de te mute toi-même ou ca se passe comment ?", ephemeral=True)
 
@@ -26,6 +26,7 @@ async def mutefunct(interaction: discord.Interaction, member: discord.Member, du
         emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal à ton rôle le plus haut.", color=discord.Color.dark_embed(), timestamp=datetime.datetime.now())
         await interaction.response.send_message(embed=emb, ephemeral=True) #type: ignore
     else:
+        await member.send(f"tu as été mute {duration} minutes pour la raison suivante : {reason}")
         if reason == None:
             reason = interaction.user.name + "| a sûrement fait quelque chose d'irrespectueux"
             await member.timeout(trueduration, reason=reason)
@@ -43,7 +44,11 @@ async def kickfunct(interaction: discord.Interaction, member: discord.Member, re
         emb = discord.Embed(title="[ERREUR] Sanction", description=f"tu n'as pas la permission de kick {member.display_name}, car le rôle {interaction.user.top_role} est supérieur ou égal au tien.", color=discord.Color.red()) #type: ignore
         await interaction.response.send_message(embed=emb, ephemeral=True)
     else:
+        await member.send(f"tu as été kick pour la raison suivante : {reason}")
         if reason == None:
             reason = interaction.user.name + "| a sûrement fait quelque chose d'irrespectueux"
-        await member.kick(reason="n'a pas respecté les règles")
-        await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
+            await member.kick(reason=reason)
+            await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)
+        else:
+            await member.kick(reason=reason)
+            await interaction.response.send_message(f"{member.display_name} (id = {member.id}) a bien été kick", ephemeral=True)

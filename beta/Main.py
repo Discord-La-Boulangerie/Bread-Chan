@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 from typing import Optional
 from discord.gateway import DiscordWebSocket, _log
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
-import enkanetwork as enk
 import aiohttp
 import asyncio
+from rule34Py import rule34Py
+
 #paramètres
 
 #mobile status
@@ -52,8 +53,8 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
 guild_id1 = 1130798906586959946
 guild_id = discord.Object(id=1130798906586959946)
-enkaclient = enk.EnkaNetworkAPI(lang="fr", cache=True)
-global uidvar
+r34py = rule34Py()
+
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -85,219 +86,23 @@ DiscordWebSocket.identify = identify
 ##commands
 #ping
 
-@client.tree.command(name = "ping", description = "[TEST] pong ! 🏓")
-async def pingpong(interaction: discord.Interaction):
-    botlink = f"https://discordapp.com/users/{client.user.id}" #type: ignore
-    boticonurl = client.user.display_avatar.url #type: ignore
-    emb=discord.Embed( description="Pong ! 🏓", color=discord_blue,timestamp=datetime.datetime.now())
-    emb.set_author(name=client.user.display_name, icon_url=f"{boticonurl}", url=f"{botlink}") # type: ignore
-    emb.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon) # type: ignore            
-    await interaction.response.send_message(embed=emb, ephemeral=True)
+@client.tree.command(name="rand_r34")
+async def r34(interaction: discord.Interaction, tag1: str, tag2: Optional[str], tag3: Optional[str], tag4: Optional[str], tag5: Optional[str]):
+    #original list
+    taglist = [tag1, tag2, tag3, tag4, tag5]
+    print(taglist)
+    #sublist created with list comprehension
+    taglist_updated = [value for value in taglist if value != None]
 
-@client.tree.context_menu(name="Profil", guild=guild_id)
-@app_commands.rename(user="Membre")
-async def profil(interaction: discord.Interaction, user: discord.Member):
-# Remove unnecessary characters
-    badges_class = str(user.public_flags.all()).replace("UserFlags.","").replace("[<","").replace(">]","").replace("hypesquad_bravery: 64","<:bravery:1137854128131932290>").replace("hypesquad_balance: 256","<:balance:1137854125120421918>").replace("hypesquad_brilliance: 128","<:brilliance:1137854120930332682>").replace("active_developer: 4194304","<:activedeveloper:1137860552257970276>").replace(">, <"," ")
-
-    # Output
-
-#NEW
-    emb = discord.Embed(
-    title=f"Profile de {user.display_name}",
-    color=user.color,
-    timestamp= datetime.datetime.now()   #Tu peux meme foutre ca en bas, ca precise a quel heure a ete fait l'embed
-    )
-    emb.add_field(name="Date de création du compte :", value=f"le {user.created_at.day}/{user.created_at.month}/{user.created_at.year} à {user.created_at.hour}h{user.created_at.minute}")
-    emb.add_field(name="Badges :", value=badges_class)
-
-    emb.set_thumbnail(url= f"{user.display_avatar}")   #Pour ajouter la pp du type
-    emb.set_footer(text=client.user, icon_url=client.user.avatar)  #Perso je fous les infos du bot la dessus
-    await interaction.response.send_message(embed=emb, ephemeral=True, view=SimpleView(url=user.avatar.url, user=user)) #type: ignore
-class SimpleView(discord.ui.View):
-    def __init__(self, user, url):
-        super().__init__()
-
-        # Link buttons cannot be made with the decorator
-        # Therefore we have to manually create one.
-        # We add the quoted url to the button, and add the button to the view.
-        self.add_item(discord.ui.Button(label=f'photo de profil de {user.display_name}', url=url))
-
-
-#rps
-@client.tree.command(name="sync", description="[ADMIN] permet de syncroniser le tree")
-@app_commands.default_permissions(manage_guild=True)
-@app_commands.choices(choix=[
-    app_commands.Choice(name="Global", value="global"),
-    app_commands.Choice(name="Guild", value="guild")
-    ])
-async def rps(interaction: discord.Interaction, choix: app_commands.Choice[str]):
-    if (choix.value == 'global'):
-        await client.tree.sync()
-        await interaction.response.send_message("le tree Global a bien été synchronisé", ephemeral=True) 
-    elif (choix.value == 'guild'):
-        await client.tree.sync(guild=guild_id)
-        await interaction.response.send_message("le tree du serveur a bien été synchronisé", ephemeral=True)
-@client.tree.command(name="snap", description="test", guild=guild_id)
-async def snap(interaction: discord.Interaction):
-    filename = f"{interaction.user.display_name}.webp"
-    await interaction.user.avatar.save(filename)
-    avatar = Image.open(filename).convert('RGB')
-    avatar = avatar.resize((285, 285))
-    bigsize = (avatar.size[0] * 3,  avatar.size[1] * 3)
-    mask = Image.new('L', bigsize, 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0) + bigsize, fill=255)
-    mask = mask.resize(avatar.size)
-    avatar.putalpha(mask)
-
-    output = ImageOps.fit(avatar, mask.size, centering=(1420, 298))
-    output.putalpha(mask)
-    output.save(f'{interaction.user.name}.webp')
-
-    files = discord.File(fp=filename)
-    await interaction.response.send_message(file=files, ephemeral=True)
-class Dropdown(discord.ui.Select):
-    def __init__(self, interaction):
-
-        # Set the options that will be presented inside the dropdown
-        options = [
-            discord.SelectOption(label='Stats Générales', description='Trophées, Victoires, etc.'),
-            discord.SelectOption(label='Club', description='Déscription, Membres, etc.'),
-            discord.SelectOption(label='OG Stats', description='XP, Power Points, etc.')
-        ]
-
-        # The placeholder is what will be shown when no option is chosen
-        # The min and max values indicate we can only pick one of the three options
-        # The options parameter defines the dropdown options. We defined this above
-        super().__init__(placeholder='Les stats que tu veux voir...', min_values=1, max_values=1, options=options)
-
-    async def callback(self, interaction: discord.Interaction):
-        # Use the interaction object to send a response message containing
-        # the user's favourite colour or choice. The self object refers to the
-        # Select object, and the values attribute gets a list of the user's
-        # selected options. We only want the first one.
-
-        if self.values[0] == 'Stats Générales':
-            printx = "Sucess" 
-            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
-
-        if self.values[0] == 'Club':
-            printx = "ça à marché"
-            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
-
-        if self.values[0] == 'OG Stats':
-            printx = 'mission réussi'
-            await interaction.edit_original_response(content=printx, view=DropdownView(interaction))
-
-
-class DropdownView(discord.ui.View):
-    def __init__(self, interaction):
-        super().__init__()
-        self.interaction = interaction
-        # Adds the dropdown to our view object.
-        self.add_item(Dropdown(interaction))
-
-@client.tree.command(name="test", description="hexatest", guild=guild_id)
-async def colour(interaction: discord.Interaction):
-
-    # Create the view containing our dropdown
-    view = DropdownView(interaction)
-
-    # Sending a message containing our view
-    await interaction.response.send_message(view=view)
-
-@client.tree.command(name="uid_save", description="[FUN][INFO] enregistre ton UID Genshin Impact", guild=guild_id)
-@app_commands.describe(amount="l'UID de ton compte Genshin Impact")
-@app_commands.rename(amount="uid")
-async def add_score(interaction: discord.Interaction, amount: int):
-    if os.path.isfile("db.json"):
-        with open("db.json", "r") as fp:
-            data = json.load(fp)
-        try:
-            data[f"{interaction.user.name}"]["Genshin UID"] = amount
-        except KeyError: # if the user isn't in the file, do the following
-            data[f"{interaction.user.name}"] = {"Genshin UID": amount} # add other things you want to store
-            await interaction.response.send_message(f"ton profil a été créé et ton UID a bien été enregistrée !\n> UID : {amount}", ephemeral=True)
+    #print  new sublist that doesn't contain 'Python'
+    print(taglist_updated)
+    cul = r34py.random_post(tags=taglist_updated)
+    try:
+        r34py.random_post(tags=taglist_updated)
+    except TypeError as e:
+        await interaction.response.send_message(content=e, ephemeral=True)
     else:
-        data = {f"{interaction.user.name}": {"Genshin UID": amount}}
-    # saving the file outside of the if statements saves us having to write it twice
-    with open("db.json", "w+") as fp:
-        json.dump(data, fp, sort_keys=True, indent=4) # kwargs for beautification
-        await interaction.response.send_message(f"ton UID a bien été modifiée!\n> UID : {amount}", ephemeral=True)
-   # you can also return the new/updated score here if you want
-
-@client.event
-async def on_message(msg: discord.Message):
-    if msg.author == client.user:
-        return
-    if msg.channel.id == 1134102319580069898:
-        await msg.create_thread(name="QOTD")
-    
-    word1 = [
-        "Salut",
-        "Hey",
-        "salut",
-        "hey",]
-    for i in range(len(word1)):    #Check pour chaque combinaison
-        if msg.content.startswith(f"{client.user.mention} {word1[i]}"):
-            rand = [
-                "entry1",
-                "entry2",
-                "entry3",
-                ]
-            await msg.reply(random.choice(rand))
-    
-    word2 = ["https://tiktok.com/", "https://vm.tiktok.com/", "https://www.tiktok.com/"]
-    for i in range(len(word2)):    #Check pour chaque combinaison
-        if word2[i] in msg.content:
-            vxTiktokResolver = str(msg.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> ","")
-            await msg.reply(content=f"résolution du lien :\n{vxTiktokResolver}", mention_author=False)
-
-
-async def enk_autocomplete(interaction: discord.Interaction, current: str):
-    enklist = []
-    data = await enkaclient.fetch_user_by_uid(str(current))
-    
-    for i in data.characters:
-        enklist.append(f"{i.name} ({data.player.nickname})")
-    return [
-        app_commands.Choice(name=char, value=char)
-        for char in enklist
-    ]
-
-@client.tree.command(name="autocomplete_test", description="permet de récupérer les infos d'un compte Genshin Impact", guild=guild_id)
-@app_commands.autocomplete(character=enk_autocomplete)
-@app_commands.describe(character="l'UID Genshin que tu veux chercher")
-async def enkatests(interaction: discord.Interaction, character: str):
-    
-    emb = discord.Embed(title=f"Le build de {character}", description=f"", timestamp=datetime.datetime.now())
-    await interaction.response.send_message(embed=emb, ephemeral=True)
-
-async def text_autocomplete(interaction: discord.Interaction, current: str):
-    randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
-    return [
-        app_commands.Choice(name=i, value=i)
-        for i in randresponse
-    ]
-
-@client.tree.command(name="summon", description="permet d'invoquer un utilisateur", guild=guild_id)
-@app_commands.autocomplete(phrase=text_autocomplete)
-@app_commands.describe(phrase="le texte que tu veux que l'invocation dise", user="l'utilisateur que tu veux invoquer")
-async def summon(interaction: discord.Interaction, user: discord.Member, phrase: Optional[str]):
-    pdp = await user.avatar.read()
-    troll = await interaction.channel.create_webhook(name=user.display_name, avatar=pdp)
-    
-    await interaction.response.send_message(f"{user.display_name} a été summon avec succès", ephemeral=True)
-    if not phrase:
-        randresponse = ["tg", "qu'est-ce qu'il y a ?", "https://cdn.discordapp.com/attachments/1117749066269474866/1159221700513255504/belt_time.mp4"]
-        await troll.send(random.choice(randresponse))
-        await asyncio.sleep(2)
-        await troll.delete()
-    else:
-        await troll.send(phrase)
-        await asyncio.sleep(2)
-        await troll.delete()
+        await interaction.response.send_message(content=f"``{str(taglist_updated).replace('[', '').replace(']', '')}``\n\n{cul.image}", ephemeral=True)
 
 #login check + bot login events
 @client.event
