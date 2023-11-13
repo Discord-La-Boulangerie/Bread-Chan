@@ -7,9 +7,15 @@
 }
 
 body {
-  background-color: white;
-  color: darkgray;
+  font-family: Arial, sans-serif;
+  background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  margin: 0;
 }
+
+/* Vos styles existants restent inchangés après cette ligne */
 
 footer div a {
   margin: 0 10px;
