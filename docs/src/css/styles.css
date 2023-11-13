@@ -10,6 +10,60 @@ body {
   background-color: white;
   color: darkgray;
 }
+@import url(https://use.fontawesome.com/releases/v6.4.2/css/all.css);
+
+@font-face {
+  font-family: Minecraft, Arial;
+  src: url(../font/Minecraft-Regular.ttf);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  margin: 0;
+}
+
+/* Styles pour les téléphones mobiles */
+@media only screen and (max-width: 600px) {
+  body {
+    font-size: 14px; /* Ajustez la taille de la police pour les écrans plus petits */
+  }
+
+  nav {
+    flex-direction: column; /* Réorganise les éléments de la navigation en colonnes */
+    align-items: center;
+  }
+
+  nav li {
+    display: block;
+    margin: 10px 0;
+  }
+
+  nav button {
+    margin: 10px 0;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-input {
+    float: none; /* Annule la flottaison à droite */
+    margin-top: 10px; /* Ajoute de l'espace au-dessus de la barre de recherche */
+  }
+
+  footer div a {
+    width: 50px; /* Ajuste la taille des liens de pied de page pour les écrans plus petits */
+    height: 50px;
+    margin: 0 5px;
+  }
+}
+
+/* Vos styles existants restent inchangés après cette ligne */
 
 footer div a {
   margin: 0 10px;
