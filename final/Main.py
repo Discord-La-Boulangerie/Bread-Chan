@@ -35,6 +35,10 @@ from PIL import Image, ImageDraw, ImageFont
 #Import de win10toast
 from win10toast import ToastNotifier
 
+import sqlite3
+
+
+
 #paramètres
 
 #mobile status
