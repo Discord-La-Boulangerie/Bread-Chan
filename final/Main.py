@@ -27,6 +27,7 @@ import enkanetwork as enk
 import fortnite_api as ftn
 from fortnite_api import errors
 from rule34Py import rule34Py
+import openai
 
 #Import de PIL
 from PIL import Image, ImageDraw, ImageFont
@@ -81,7 +82,7 @@ BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
 UNB_TOKEN = os.getenv("unbelivaboat_api_token")
-
+openai.api_key = os.getenv("openai_key")
 # discord client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
