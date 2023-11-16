@@ -6,6 +6,10 @@
 
 }
 
+form {
+  display: flex; /* Utiliser la flexbox pour aligner les éléments horizontalement */
+}
+
 body {
   font-family: Arial, sans-serif;
   background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
@@ -15,7 +19,15 @@ body {
   margin: 0;
 }
 
-/* Vos styles existants restent inchangés après cette ligne */
+#sub-button {
+  border-radius: 10px;
+  padding: 8px 15px; /* Ajuster le rembourrage selon vos préférences */
+  margin-left: 5px; /* Ajouter un espace entre l'input et le bouton */
+  border: 1px solid #ccc;
+  background-color: #4caf50; /* Ajouter une couleur de fond au bouton */
+  color: white; /* Ajouter une couleur de texte au bouton */
+  cursor: pointer; /* Afficher un pointeur au survol du bouton */
+}
 
 footer div a {
   margin: 0 10px;
@@ -124,10 +136,14 @@ footer p a {
   margin: auto;
 }
 
-.search-input {
+div input {
   float: right;
   align-items: center;
   font-family: "Minecraft", sans-serif;
+  border-radius: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  width: 70%;
 }
 
 h1 {
