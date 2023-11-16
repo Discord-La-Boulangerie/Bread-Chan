@@ -9,7 +9,7 @@ load_dotenv()
 token = os.getenv("discord_token")
 
 # Configuration de la base de données SQLite
-conn = sqlite3.connect('./database/database.db')
+conn = sqlite3.connect('./database.db')
 cursor = conn.cursor()
 
 # Création de la table si elle n'existe pas
@@ -20,7 +20,6 @@ cursor.execute('''
     )
 ''')
 conn.commit()
-
 
 # Configuration du bot Discord
 intents = discord.Intents.all()
@@ -47,7 +46,6 @@ class MyClient(discord.Client):
 client = MyClient(intents=intents)
 guild_id = 1130798906586959946
 guild_id1 = discord.Object(id=guild_id)
-
 
 @client.event
 async def on_ready():
@@ -82,27 +80,26 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
     # Vérifiez si l'utilisateur a déjà un rôle
     cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id}")
     result = cursor.fetchone()
-
     if result:
         # Obtenez le rôle de l'utilisateur et mettez à jour le nom et la couleur
         role = interaction.guild.get_role(result[0])
-        if name is not None:
-            if not color:
-                await role.edit(name=str(name))
-                await interaction.response.send_message("Le rôle a été mis à jour.", ephemeral=True)
-            else:
-                await role.edit(name=str(name))
-                await interaction.response.send_message("Le rôle a été mis à jour.", ephemeral=True)
-        if color is not None:
-            if name is None:
-                await role.edit(name=str(name), color=discord.Colour.from_str(str(color)))
-                await interaction.response.send_message("Le rôle a été mis à jour.", ephemeral=True)
-            else:
-                await interaction.response.send_message("vous devez spécifier au moins un des deux paramètres.", ephemeral=True)
+        if name is None and color is None:
+            await interaction.response.send_message("spécifie au moins un paramètre, s'il te plait.", ephemeral=True)
+
+        if name:
+            await role.edit(name=str(name))
+            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.", ephemeral=True)
+
+        if color:
+            await role.edit(color=discord.Color(int(color)))
+            await interaction.response.send_message(f"Le {role.mention} a été mis à jour.", ephemeral=True)
+
         else:
-            await interaction.response.send_message("une erreur inconnue est survenue, contacte mon créateur pour plus d'informations.", ephemeral=True)
+            await role.edit(name=str(name), color=discord.Color.from_str(str(color)))
+            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.", ephemeral=True)
+
     else:
         await interaction.response.send_message("Vous n'avez pas encore de rôle. Utilisez /role-get pour en obtenir un.", ephemeral=True)
-
+    
 # Exécutez le bot
 client.run(str(token))

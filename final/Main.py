@@ -27,7 +27,6 @@ import enkanetwork as enk
 import fortnite_api as ftn
 from fortnite_api import errors
 from rule34Py import rule34Py
-import openai
 
 #Import de PIL
 from PIL import Image, ImageDraw, ImageFont
