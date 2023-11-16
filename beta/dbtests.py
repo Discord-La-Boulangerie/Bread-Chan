@@ -9,7 +9,7 @@ load_dotenv()
 token = os.getenv("discord_token")
 
 # Configuration de la base de données SQLite
-conn = sqlite3.connect('./database.db')
+conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
 # Création de la table si elle n'existe pas
@@ -86,6 +86,10 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
         if name is None and color is None:
             await interaction.response.send_message("spécifie au moins un paramètre, s'il te plait.", ephemeral=True)
 
+        if name and color:
+            await role.edit(name=str(name), color=discord.Color.from_str(str(color)))
+            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.", ephemeral=True)
+
         if name:
             await role.edit(name=str(name))
             await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.", ephemeral=True)
@@ -93,10 +97,6 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
         if color:
             await role.edit(color=discord.Color(int(color)))
             await interaction.response.send_message(f"Le {role.mention} a été mis à jour.", ephemeral=True)
-
-        else:
-            await role.edit(name=str(name), color=discord.Color.from_str(str(color)))
-            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.", ephemeral=True)
 
     else:
         await interaction.response.send_message("Vous n'avez pas encore de rôle. Utilisez /role-get pour en obtenir un.", ephemeral=True)
