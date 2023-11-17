@@ -85,7 +85,6 @@ BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
 UNB_TOKEN = os.getenv("unbelivaboat_api_token")
-openai.api_key = os.getenv("openai_key")
 # discord client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -538,13 +537,14 @@ class DropdownView(discord.ui.View):
     app_commands.Choice(name="Vidéo", value="video")
 ])
 @app_commands.describe(choix="le type de media")
-async def r34(interaction: discord.Interaction, choix: app_commands.Choice[str], tag1: str, tag2: Optional[str], tag3: Optional[str], tag4: Optional[str], tag5: Optional[str]):
+async def r34(interaction: discord.Interaction, choix: app_commands.Choice[str], tag1: Optional[str] = None, tag2: Optional[str] = None, tag3: Optional[str] = None, tag4: Optional[str] = None, tag5: Optional[str] = None):
+
     #original list
     taglist = [choix.value, tag1, tag2, tag3, tag4, tag5]
 
     #sublist created with list comprehension
     #define new sublist that doesn't contain None
-    taglist_updated = [value for value in taglist if value != None]
+    taglist_updated: list[str] = [value for value in taglist if value != None]
 
 
     cul = r34py.random_post(tags=taglist_updated)
@@ -579,10 +579,12 @@ class r34view(discord.ui.View):
             await interaction.response.send_message(content=e, ephemeral=True)
         else:
             if 'video' in str(self.tags):
-                await interaction.edit_original_response(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.video}", view=r34view(base_url + str(cul.id), tags=self.tags))
-            else:        
-                await interaction.edit_original_response(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.image}", view=r34view(base_url + str(cul.id), tags=self.tags))
+                await interaction.response.send_message(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.video}", view=r34view(base_url + str(cul.id), tags=self.tags), ephemeral=True)
+                await interaction.delete_original_response()
 
+            else:
+                await interaction.response.send_message(content=f"``{str(self.tags).replace('[', '').replace(']', '')}``\n\n{cul.image}", view=r34view(base_url + str(cul.id), tags=self.tags), ephemeral=True)
+                await interaction.delete_original_response()
 #report system
 #def modal
 class ReportModal(discord.ui.Modal, title="signalement"):
