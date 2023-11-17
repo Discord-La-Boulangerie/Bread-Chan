@@ -10,13 +10,16 @@ token = os.getenv("discord_token")
 
 # Configuration de la base de données SQLite
 conn = sqlite3.connect('database.db')
+
 cursor = conn.cursor()
 
-# Création de la table si elle n'existe pas
+# Créez la table si elle n'existe pas
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS roles (
-        user_id INTEGER PRIMARY KEY,
-        role_id INTEGER
+        user_id INTEGER,
+        role_id INTEGER,
+        guild_id INTEGER,
+        PRIMARY KEY (user_id, guild_id)
     )
 ''')
 conn.commit()
@@ -55,7 +58,7 @@ async def on_ready():
 @client.tree.command(name="role-get")
 async def get_role(interaction: discord.Interaction):
     # Vérifiez si l'utilisateur a déjà un rôle
-    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id}")
+    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
     result = cursor.fetchone()
 
     if result:
@@ -67,7 +70,7 @@ async def get_role(interaction: discord.Interaction):
         await interaction.user.add_roles(role)
 
         # Stocker l'identifiant du rôle dans la base de données
-        cursor.execute(f"INSERT INTO roles (user_id, role_id) VALUES ({interaction.user.id}, {role.id})")
+        cursor.execute(f"INSERT INTO roles (user_id, role_id, guild_id) VALUES ({interaction.user.id}, {role.id}, {interaction.guild.id})")
         conn.commit()
 
         await interaction.response.send_message("Vous avez obtenu un nouveau rôle.")
@@ -78,7 +81,7 @@ async def get_role(interaction: discord.Interaction):
 @app_commands.describe(name="change le nom de ton rôle")
 async def setup_role(interaction: discord.Interaction, name: Optional[str] = None, color: Optional[str] = None):
     # Vérifiez si l'utilisateur a déjà un rôle
-    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id}")
+    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
     result = cursor.fetchone()
     if result:
         # Obtenez le rôle de l'utilisateur et mettez à jour le nom et la couleur
