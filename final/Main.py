@@ -36,7 +36,23 @@ from win10toast import ToastNotifier
 
 import sqlite3
 
+load_dotenv()
 
+# Configuration de la base de données SQLite
+conn = sqlite3.connect('database.db')
+
+cursor = conn.cursor()
+
+# Créez la table si elle n'existe pas
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS roles (
+        user_id INTEGER,
+        role_id INTEGER,
+        guild_id INTEGER,
+        PRIMARY KEY (user_id, guild_id)
+    )
+''')
+conn.commit()
 
 #paramètres
 
@@ -195,6 +211,74 @@ async def sendrule(interaction: discord.Interaction):
     #send embed to rules chat
     await channel.send(embed=emb) #type: ignore
     await interaction.response.send_message("envoyé!", ephemeral=True)
+
+#custom role system
+
+# Commande pour obtenir un rôle
+@client.tree.command(name="role-get")
+async def get_role(interaction: discord.Interaction):
+    # Vérifiez si l'utilisateur a déjà un rôle
+    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
+    result = cursor.fetchone()
+
+    if result:
+        await interaction.response.send_message("Vous avez déjà un rôle.")
+    else:
+        # Créer un nouveau rôle et l'ajouter à l'utilisateur
+        role = await interaction.guild.create_role(name=f"{interaction.user.name}'s Role")
+        await role.edit(position=interaction.user.top_role.position)
+        await interaction.user.add_roles(role)
+
+        # Stocker l'identifiant du rôle dans la base de données
+        cursor.execute(f"INSERT INTO roles (user_id, role_id, guild_id) VALUES ({interaction.user.id}, {role.id}, {interaction.guild.id})")
+        conn.commit()
+
+        await interaction.response.send_message("Vous avez obtenu un nouveau rôle.", ephemeral=True)
+
+# Commande pour configurer le nom et la couleur du rôle
+@client.tree.command(name="role-setup")
+@app_commands.describe(color="choisis une couleur dans la liste ou une couleur custom en HEX, RGB, HSL")
+@app_commands.describe(name="change le nom de ton rôle")
+async def setup_role(interaction: discord.Interaction, name: Optional[str] = None, color: Optional[str] = None):
+    # Vérifiez si l'utilisateur a déjà un rôle
+    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
+    result = cursor.fetchone()
+    if result:
+
+        # Obtenez le rôle de l'utilisateur et mettez à jour le nom et la couleur
+        role = interaction.guild.get_role(result[0])
+        if name is None and color is None:
+            await interaction.response.send_message("spécifie au moins un paramètre, s'il te plait.", ephemeral=True)
+
+        if name and color:
+            before = role.name
+            bcolor = role.color
+            await role.edit(name=str(name), color=discord.Color.from_str(str(color)))
+            after = role.name
+            acolor = role.color
+            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.\r\rancien nom : {before}\n nouveau nom : {after}\nancienne couleur : {bcolor}\nnouvelle couleur : {acolor}", ephemeral=True)
+
+        if name is True and color is False:
+            before = role.name
+            await role.edit(name=str(name))
+            after = role.name
+            await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.\r\rancien nom : {before}\n nouveau nom : {after}", ephemeral=True)
+
+        if color is True and name is False:
+            bcolor = role.color
+            await role.edit(color=discord.Color(int(color)))
+            acolor = role.color
+            await interaction.response.send_message(f"Le {role.mention} a été mis à jour.\r\rancienne couleur : {bcolor}\rnouvelle couleur : {acolor}", ephemeral=True)
+
+    else:
+        await interaction.response.send_message("Vous n'avez pas encore de rôle. Utilisez /role-get pour en obtenir un.", ephemeral=True)
+
+
+
+
+
+
+
 
 #rps
 @client.tree.command(name="rps", description="[FUN] Shi-Fu-Mi")
