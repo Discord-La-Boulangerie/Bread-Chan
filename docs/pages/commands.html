@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Bread Chan | Commandes</title>
     <link rel="stylesheet" href="../src/css/styles.css">
+    <link rel="stylesheet" href="../src/css/commandstyles.css">
     <link rel="shortcut icon" href="../src/img/bc.png" type="image/x-icon">
     <meta name="twitter:title" content="Bread-Chan">
     <meta name="twitter:author" content="Wishrito">
@@ -35,121 +36,25 @@
         <section>
             <h2>Commandes de Bread Chan</h2>
             <p>Découvrez les commandes puissantes de Bread Chan, le bot de modération pour plusieurs serveurs Discord. Que vous ayez besoin de gérer les membres, de personnaliser les interactions ou d'obtenir des informations, notre bot est là pour vous simplifier la tâche. Explorez les commandes disponibles pour améliorer la gestion de votre serveur Discord.</p>
-        </section>
-        <section class="command">
-            <h3>/ping</h3>
-            <ul>
-                <li><strong>Description :</strong>simple, efficace, elle permet simplement d'indiquer la latence du bot.</li>
-                <li><strong>Permissions requises :</strong>Aucunes.</li>
-                <li><strong>Paramètres :</strong>
-                    <ul>
-                        <li>Aucun</li>
-                    </ul>
-                </li>
-            </ul>
-        </section>
-        <section>
-            <div class="command">
-                <h3>bot_info</h3>
-                <ul>
-                    <li><strong>Description :</strong>Cette commande permet d'afficher les informations du bot, à savoir : <ul>
-                        <li>son nom</li>
-                        <li>sa photo de profil actuelle</li>
-                        <li>ses librairies, ainsi que leurs versions</li>
-                    </ul></li>
-                    <li><strong>Permissions requises : </strong>Aucunes.</li>
-                    <li><strong>Paramètres :</strong>
-                        <ul>
-                            <li>Aucun</li>
-                        </ul>
-                    </li>
-                </ul>
+            
+            <input type="text" id="searchInput" placeholder="Rechercher une commande...">
+            <table id="commandTable">
+                <tr>
+                    <th>Commande</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>/help</td>
+                    <td>Affiche la liste des commandes disponibles.</td>
+                </tr>
+                <tr>
+                    <td>/info</td>
+                    <td>Donne des informations sur le bot </td>
+                </tr>
+                <!-- Ajoutez autant de lignes que nécessaire pour les commandes du bot -->
+            </table>
+                </section>
             </div>
-        </section>
-        <section>
-            <div class="command">
-                <h3>genshin_info</h3>
-                <ul>
-                    <li><strong>Description :</strong>Cette commande permet d'afficher le profil Genshin Impact d'un joueur.</li>
-                    <li><strong>Permissions requises : </strong>Aucunes.</li>
-                    <li><strong>Paramètres :</strong>
-                        <ul>
-                            <li>`UID` : l'indentifiant du joueur que vous souhaitez rechercher.</li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </section>
-        <section>
-            <div class="command">
-                <h3>ban_appeal</h3>
-                <ul>
-                    <li><strong>Description :</strong>Cette commande gère les demandes de débannissement. Elle vérifie si un utilisateur est banni sur un serveur Discord, puis affiche la raison du bannissement et offre la possibilité de soumettre une demande de débannissement.</li>
-                    <li><strong>Permissions requises : </strong>Aucunes, il faut en revanche être banni du serveur afin de pouvoir effectuer une demande.</li>
-                    <li><strong>Paramètres :</strong>
-                        <ul>
-                            <li>Aucun</li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </section>
-        <section class="command">
-                <h3>rps</h3>
-                <ul>
-                    <li><strong>Description :</strong> Cette commande permet de jouer à shi-fu-mi avec Bread Chan (elle est très forte).</li>
-                    <li><strong>Permissions requises : </strong>Aucunes.</li>
-                    <li><strong>Paramètres :</strong>
-                        <ul>
-                            <li>`choix` : un choix entre `Rock`, `Paper` et `Scissors`.</li>
-                        </ul>
-                    </li>
-                </ul>
-        </section>
-        <section class="command">
-            <h3>/mute</h3>
-            <ul>
-                <li><strong>Description :</strong> Cette commande permet de mute un utilisateur spécifié du serveur Discord.</li>
-                <li><strong>Permissions requises : </strong>L'utilisateur qui exécute la commande doit avoir la permission de gérer des membres sur le serveur.</li>
-                <li><strong>Paramètres :</strong>
-                    <ul>
-                        <li>`membre` : L'utilisateur que vous souhaitez mute.</li>
-                        <li>`durée` : la durée du mute</li>
-                        <li>`raison` (optionnel) : La raison du mute.</li>
-                        <li>`fichier` (optionnel) : preuve potentielle attestant de la véracité du mute</li>
-                    </ul>
-                </li>
-            </ul>
-        </section>
-        <section class="command">
-            <h3>kick</h3>
-            <ul>
-                <li><strong>Description :</strong> Cette commande permet de kicker un utilisateur du serveur Discord.</li>
-                <li><strong>Permissions requises : </strong>L'utilisateur qui exécute la commande doit avoir la permission de kicker des membres sur le serveur.</li>
-                <li><strong>Paramètres :</strong>
-                    <ul>
-                        <li>`member` : L'utilisateur que vous souhaitez kicker.</li>
-                        <li>`reason` (optionnel) : La raison du kick.</li>
-                    </ul>
-                </li>
-            </ul>
-        </section>
-        <section class="command">
-            <h3>webhook</h3>
-            <ul>
-                <li><strong>Description :</strong> Cette commande permet d'envoyer un message via un webhook dans un salon spécifié.</li>
-                <li><strong>Permissions requises : </strong>L'utilisateur qui exécute la commande doit avoir la permission de gérer le serveur.</li>
-                <li><strong>Paramètres :</strong>
-                    <ul>
-                        <li>`texte` : Le texte que le webhook doit envoyer.</li>
-                        <li>`nom` : Le nom du webhook.</li>
-                        <li>`channel` (optionnel) : Le salon où le message du webhook sera envoyé.</li>
-                        <li>`file` (optionnel) : Une image qui peut servir de photo de profil pour le webhook.</li>
-                    </ul>
-                </li>
-            </ul>
-        </section>
-    </div>
     <footer>
         <p>
             <a href="tos.html">Terms of Service</a> | <a href="privacy-policy.html">Privacy Policy</a>
@@ -171,5 +76,6 @@
         </div>
     </footer>
     <script src="../src/scripts/search.js"></script>
+    <script src="../src/scripts/table.js"></script>
 </body>
 </html>

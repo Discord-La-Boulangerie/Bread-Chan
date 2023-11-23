@@ -11,7 +11,7 @@ form {
 
 body {
   font-family: Arial, sans-serif;
-  background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
+  background-image: url(https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg);
   background-attachment: fixed;
   background-size: cover;
   background-position: center;
