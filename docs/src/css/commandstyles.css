@@ -1,15 +1,24 @@
 table {
   font-family: Arial, sans-serif;
   border-collapse: collapse;
-  width: 100%;
+  width: fit-content;
 }
   
 th, td {
   border: 1px solid #dddddd;
-  text-align: left;
+  padding: 8px;
+  text-align: center; /* Centrer le contenu de la cellule horizontalement */
+  vertical-align: middle; /* Centrer le contenu de la cellule verticalement */
   padding: 8px;
 }
-  
+#searchInput {
+  display: flex;
+  border: 1px solid #dddddd;
+  padding: 8px;
+  width: auto;
+}
+
+
 tr:nth-child(even) {
   background-color: #f2f2f2;
 }
