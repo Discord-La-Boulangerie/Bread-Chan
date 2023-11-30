@@ -161,7 +161,7 @@ async def unbbank(interaction: discord.Interaction, user: Optional[discord.Membe
         
 @client.tree.command(name="ping", description="[TEST] pong ! 🏓")
 async def pingpong(interaction: discord.Interaction):
-    emb=discord.Embed(description=f"Pong ! 🏓 {round(client.latency, 1)}", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
+    emb=discord.Embed(description=f"Pong ! 🏓 {round(client.latency, 1)} ms", color=discord.Color.blurple(),timestamp=datetime.datetime.now())
     await interaction.response.send_message(embed=emb, ephemeral=True)
 
 @client.tree.command(name="bot_info", description="permet d'obtenir les infos du bot")
