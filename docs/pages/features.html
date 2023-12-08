@@ -5,6 +5,8 @@
     <title>Bread Chan | Fonctionnalités</title>
     <link rel="stylesheet" href="../src/css/styles.css">
     <link rel="shortcut icon" href="../src/img/bc.png" type="image/x-icon">
+    <script src="../src/scripts/search.js"></script>
+    <script src="../src/scripts/sound.js"></script>
     <meta name="twitter:title" content="Bread-Chan">
     <meta name="twitter:author" content="Wishrito">
     <meta name="twitter:description" content="Les fonctionnalités de Bread-Chan, un excellent bot Discord en constante évolution">
@@ -17,10 +19,10 @@
     </header>
     <nav class="navbar">
         <ul>
-            <li><a href="https://discord-la-boulangerie.github.io/Bread-Chan/"><i class="fa-solid fa-house-chimney"></i> Accueil</a></li>
-            <li><a href="features.html"><i class="fa-solid fa-arrow-up-from-bracket"></i> Features</a></li>
-            <li><a href="commands.html"><i class="fa-solid fa-gear fa-spin"></i></i> Commands</a></li>
-            <li><a href="about.html"><i class="fa-solid fa-circle-info"></i> About</a></li>
+            <li><a href="https://discord-la-boulangerie.github.io/Bread-Chan/" onclick=playSound()><i class="fa-solid fa-house-chimney"></i> Accueil</a></li>
+            <li><a href="features.html"><i class="fa-solid fa-arrow-up-from-bracket" onclick=playSound()></i> Fonctionnalités</a></li>
+            <li><a href="commands.html"><i class="fa-solid fa-gear fa-spin" onclick=playSound()></i></i> Commandes</a></li>
+            <li><a href="about.html"><i class="fa-solid fa-circle-info"></i> A propos</a></li>
             <li><a href="https://github.com/Discord-La-Boulangerie/Bread-Chan" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Github repo</a></li>
         </ul>
         <div class="search-bar">
@@ -30,6 +32,10 @@
             </form>
         </div>
     </nav>
+    <audio id="myAudio">
+        <source src="../src/sounds/xbox-series-notification.mp3" type="audio/mp3">
+        Votre navigateur ne supporte pas l'élément audio.
+    </audio>
     <div class="container">
         <section>
             <h2>Fonctionnalité 1 : Modération</h2>
@@ -71,6 +77,5 @@
             </a>
         </div>
     </footer>
-    <script src="../src/scripts/search.js"></script>
 </body>
 </html>
