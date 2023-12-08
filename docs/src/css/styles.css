@@ -48,7 +48,7 @@ footer div a {
   justify-content: center;
   align-items: center;
   text-decoration: none;
-  transition: 0.5s;
+  transition: transform 0.3s ease-in-out;
   background: rgba(0, 0, 0, 0);
   color: var(--color);
 }
@@ -199,37 +199,37 @@ section a {
 }
 
 .linkedin {
-  transition: 0.5s;
+  transition: transform 0.3s ease-in-out;
   --color: #0072b1
 }
 
 .twitter {
-  transition: 0.5s;
+  transition: transform 0.3s ease-in-out;
   --color: #000000
 }
 
 .discord {
-  transition: 0.5s;
+  transition: transform 0.3s ease-in-out;
   --color: #7289DA
 }
 
 .github {
-  transition: 0.5s;
+  transition: transform 0.3s ease-in-out;
   --color: #000000
 }
 
 .linkedin:hover {
-  width: 10px;
+  transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
 .twitter:hover {
-  width: 10px;
+  transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
 .discord:hover {
-  width: 10px;
+  transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
 .github:hover {
-  width: 10px;
+  transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
