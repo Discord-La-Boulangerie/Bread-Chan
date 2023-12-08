@@ -1,7 +1,7 @@
 table {
   font-family: Arial, sans-serif;
   border-collapse: collapse;
-  width: fit-content;
+  width: -moz-fit-content;
 }
   
 th, td {

@@ -199,17 +199,37 @@ section a {
 }
 
 .linkedin {
+  transition: 0.5s;
   --color: #0072b1
 }
 
 .twitter {
+  transition: 0.5s;
   --color: #000000
 }
 
 .discord {
+  transition: 0.5s;
   --color: #7289DA
 }
 
 .github {
+  transition: 0.5s;
   --color: #000000
+}
+
+.linkedin:hover {
+  width: 10px;
+}
+
+.twitter:hover {
+  width: 10px;
+}
+
+.discord:hover {
+  width: 10px;
+}
+
+.github:hover {
+  width: 10px;
 }

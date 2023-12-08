@@ -425,7 +425,7 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await asyncio.sleep(5)
             await webhookcreate.delete()
             await edit.delete()
-        if not file == None:
+        if file is not None:
             pdp = await file.read()
             webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
             await interaction.response.send_message(content=f"webhook en cours d'envoi dans {interaction.channel}...", ephemeral=True)
@@ -501,20 +501,12 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
     try:
         e = await fnapi.stats.fetch_by_name(name=pseudo) # type: ignore
     except errors.NotFound as NotFound:
-        # Créer un objet ToastNotifier
-        toaster = ToastNotifier()
 
-        # Afficher une notification
-        toaster.show_toast("Bread Chan : Erreur", f"{NotFound}")
         emb = discord.Embed(title=f"Erreur", description=NotFound, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
     except errors.Forbidden as Forbidden:
-        # Créer un objet ToastNotifier
-        toaster = ToastNotifier()
 
-        # Afficher une notification
-        toaster.show_toast("Bread Chan : Erreur", f"{Forbidden}")
         emb = discord.Embed(title=f"Erreur", description=Forbidden, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
@@ -531,7 +523,8 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
             emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.keyboard_mouse.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.keyboard_mouse.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.keyboard_mouse.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
         if support.value == "touch":
             emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.touch.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.touch.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.touch.squad.kills} kills <:FortniteCrosshair:1169734856884887632>")
-        
+        emb.set_thumbnail(url=e.image_url)
+        print(e)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
 
 @client.tree.command(name="brawlstars_profil", description="obtenir des infos sur un compte Brawl Stars")
@@ -615,6 +608,22 @@ class DropdownView(discord.ui.View):
         self.data = data
         # Adds the dropdown to our view object.
         self.add_item(Dropdown(data))
+
+@client.tree.command(name="rate_pfp", description="génère un sondage sur la pdp", guild=guild_id1)
+async def rate(interaction: discord.Interaction, user: Optional[discord.Member] = None):
+    emojilist = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+    emb = discord.Embed()
+    if user is None:
+        emb.set_author(name=f"Sondage de photo de profil de {interaction.user.name}", url=interaction.user.avatar.url)
+        emb.set_thumbnail(url=interaction.user.avatar)
+    else:
+        emb = discord.Embed(description=f"sondage effectué par {interaction.user.name}")
+        emb.set_author(name=f"Sondage de photo de profil de {user.name}", url=user.avatar.url)
+        emb.set_thumbnail(url=user.avatar)
+    emb.set_image(url="https://cdn.discordapp.com/attachments/1130945537907114145/1180639324161704048/xqvQtBBu.png")
+    send = await interaction.channel.send(embed=emb)
+    for i in range(len(emojilist)):
+        await send.add_reaction(emojilist[i])
 
 @client.tree.command(name="r34", description="cherche une video ou image sur Rule34", nsfw=True)
 @app_commands.choices(choix=[
