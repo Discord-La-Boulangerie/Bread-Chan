@@ -198,38 +198,38 @@ section a {
   color: inherit;
 }
 
-.linkedin {
+.fa-brands.fa-linkedin-in {
   transition: transform 0.3s ease-in-out;
   --color: #0072b1
 }
 
-.twitter {
+.fa-brands.fa-x-twitter {
   transition: transform 0.3s ease-in-out;
   --color: #000000
 }
 
-.discord {
+.fa-brands.fa-discord {
   transition: transform 0.3s ease-in-out;
   --color: #7289DA
 }
 
-.github {
+.fa-brands.fa-github {
   transition: transform 0.3s ease-in-out;
   --color: #000000
 }
 
-.linkedin:hover {
+.fa-brands.fa-linkedin-in:hover {
   transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
-.twitter:hover {
+.fa-brands.fa-x-twitter:hover {
   transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
-.discord:hover {
+.fa-brands.fa-discord:hover {
   transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
 
-.github:hover {
+.fa-brands.fa-github:hover {
   transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
 }
