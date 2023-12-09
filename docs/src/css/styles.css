@@ -200,23 +200,36 @@ section a {
 
 .fa-brands.fa-linkedin-in {
   transition: transform 0.3s ease-in-out;
-  --color: #0072b1
 }
 
 .fa-brands.fa-x-twitter {
   transition: transform 0.3s ease-in-out;
-  --color: #000000
 }
 
 .fa-brands.fa-discord {
   transition: transform 0.3s ease-in-out;
-  --color: #7289DA
 }
 
 .fa-brands.fa-github {
   transition: transform 0.3s ease-in-out;
+}
+
+.linkedin {
+  --color: #0072b1
+}
+
+.twitter {
   --color: #000000
 }
+
+.discord {
+  --color: #7289DA
+}
+
+.github {
+  --color: #000000
+}
+
 
 .fa-brands.fa-linkedin-in:hover {
   transform: scale(1.2); /* Augmente la taille de 20% lorsqu'elle est survolée */
