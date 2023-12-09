@@ -214,19 +214,19 @@ section a {
   transition: transform 0.3s ease-in-out;
 }
 
-.linkedin {
+a .linkedin {
   --color: #0072b1
 }
 
-.twitter {
+a .twitter {
   --color: #000000
 }
 
-.discord {
+a .discord {
   --color: #7289DA
 }
 
-.github {
+a .github {
   --color: #000000
 }
 
