@@ -11,8 +11,8 @@ form {
 
 body {
   font-family: Arial, sans-serif;
-  background-image: url(https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg);
-  background-attachment: fixed;
+  background: rgb(36,0,27);
+  background: linear-gradient(41deg, rgba(36,0,27,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
   background-size: cover;
   background-position: center;
   margin: 0;
@@ -51,14 +51,6 @@ footer div a {
   transition: 0.5s;
   background: rgba(0, 0, 0, 0);
   color: var(--color);
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background-image: url('https://mwittrien.github.io/BetterDiscordAddons/Themes/BasicBackground/_res/background.jpg');
-  background-attachment: fixed;
-  background-size: cover; /* Ajuste la taille de l'image pour couvrir tout le bloc */
-  background-position: center; /* Centre l'image dans le bloc */
 }
 
 header {
@@ -199,17 +191,37 @@ section a {
 }
 
 .linkedin {
+  transition: 0.7s ease-out;
   --color: #0072b1
 }
 
 .twitter {
+  transition: 0.7s ease-out;
   --color: #000000
 }
 
 .discord {
+  transition: 0.3s ease;
   --color: #7289DA
 }
 
 .github {
+  transition: 0.3s ease;
   --color: #000000
+}
+
+i.fa-brands.fa-linkedin-in:hover {
+  transform: scale(1.2);
+}
+
+i.fa-brands.fa-x-twitter:hover {
+  transform: scale(1.2);
+}
+
+i.fa-brands.fa-discord:hover {
+  transform: scale(1.2);
+}
+
+i.fa-brands.fa-github:hover {
+  transform: scale(1.2);
 }

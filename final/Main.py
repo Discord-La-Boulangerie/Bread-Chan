@@ -11,7 +11,7 @@ from collections import * #type: ignore
 #Import de discord et modules discord
 import discord
 import discord.ext.commands
-from discord import ButtonStyle, app_commands, Team, ui
+from discord import ButtonStyle, Forbidden, app_commands, Team, ui
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 from discord.utils import MISSING
@@ -28,12 +28,6 @@ import fortnite_api as ftn
 from fortnite_api import errors
 from rule34Py import rule34Py
 
-#Import de PIL
-from PIL import Image, ImageDraw, ImageFont
-
-#Import de win10toast
-from win10toast import ToastNotifier
-
 import sqlite3
 
 load_dotenv()
@@ -42,17 +36,6 @@ load_dotenv()
 conn = sqlite3.connect('database.db')
 
 cursor = conn.cursor()
-
-# Créez la table si elle n'existe pas
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS roles (
-        user_id INTEGER,
-        role_id INTEGER,
-        guild_id INTEGER,
-        PRIMARY KEY (user_id, guild_id)
-    )
-''')
-conn.commit()
 
 #paramètres
 
@@ -127,6 +110,10 @@ intents = discord.Intents.all()
 client = MyClient(intents=intents)
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
+sio_guild_id = 1163111703689576541
+sio_guild = discord.Object(id=sio_guild_id)
+bc_supportid = 1181845184288411688
+bc_supportguild = discord.Object(bc_supportid)
 DiscordWebSocket.identify = identify
 logs_channel = 1131864743502696588
 
@@ -202,7 +189,7 @@ class staff(discord.ui.Modal):
             await staffmsg.add_reaction(emojilist[i])
 
 #sendrule
-@client.tree.command(name="sendrule", description = "[MODERATION]permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
+@client.tree.command(name="sendrule", description = "[MODERATION] permet d'envoyer l'embed du règlement.", guild=guild_id1) #Add the guild ids in which the slash command will appear. If it should be in all, remove the argument, but note that it will take some time (up to an hour) to register the command if it's for all guilds.
 @app_commands.default_permissions(manage_guild=True)
 async def sendrule(interaction: discord.Interaction):
     channel=client.get_channel(1130945537907114137)
@@ -216,42 +203,53 @@ async def sendrule(interaction: discord.Interaction):
 #custom role system
 
 # Commande pour obtenir un rôle
-@client.tree.command(name="role-get")
+@client.tree.command(name="role-get", description="te donne un rôle custom")
 async def get_role(interaction: discord.Interaction):
+
     # Vérifiez si l'utilisateur a déjà un rôle
-    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
+    cursor.execute(f"SELECT role_id FROM {interaction.guild.id} WHERE user_id = {str(interaction.user.id)}")
     result = cursor.fetchone()
 
     if result:
-        await interaction.response.send_message("Vous avez déjà un rôle.")
+        await interaction.response.send_message("Vous avez déjà un rôle.", ephemeral=True)
     else:
         # Créer un nouveau rôle et l'ajouter à l'utilisateur
         role = await interaction.guild.create_role(name=f"{interaction.user.name}'s Role")
-        await role.edit(position=interaction.user.top_role.position)
+        try:
+            await role.edit(position=interaction.user.top_role.position)
+        except Forbidden as forb:
+            await interaction.response.send_message(forb)
+            
         await interaction.user.add_roles(role)
 
         # Stocker l'identifiant du rôle dans la base de données
-        cursor.execute(f"INSERT INTO roles (user_id, role_id, guild_id) VALUES ({interaction.user.id}, {role.id}, {interaction.guild.id})")
+        cursor.execute(f"INSERT INTO {interaction.guild.id} (user_id, role_id) VALUES ({interaction.user.id}, {role.id})")
         conn.commit()
-
         await interaction.response.send_message("Vous avez obtenu un nouveau rôle.", ephemeral=True)
 
+@client.tree.command(name="reboot", guild=bc_supportguild)
+@app_commands.default_permissions(administrator=True)
+async def reboot(interaction: discord.Interaction):
+    await interaction.response.send_message(f"{client.user.name} va redémarrer dans 5 secondes.", ephemeral=True)
+    await asyncio.sleep(5)
+    await client.close()
+    client.run(str(DISCORD_TOKEN))
+
 # Commande pour configurer le nom et la couleur du rôle
-@client.tree.command(name="role-setup")
-@app_commands.describe(color="choisis une couleur dans la liste ou une couleur custom en HEX, RGB, HSL")
+@client.tree.command(name="role-setup", description="permet de configurer le rôle que tu t'es attribué")
+@app_commands.describe(color="choisis une couleur en HEX, RGB ou HSL")
 @app_commands.describe(name="change le nom de ton rôle")
 async def setup_role(interaction: discord.Interaction, name: Optional[str] = None, color: Optional[str] = None):
     # Vérifiez si l'utilisateur a déjà un rôle
-    cursor.execute(f"SELECT role_id FROM roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
+
+    cursor.execute(f"SELECT role_id FROM {interaction.guild.id} WHERE user_id = {str(interaction.user.id)}")
     result = cursor.fetchone()
     if result:
 
         # Obtenez le rôle de l'utilisateur et mettez à jour le nom et la couleur
         role = interaction.guild.get_role(result[0])
-        if name is None and color is None:
-            await interaction.response.send_message("spécifie au moins un paramètre, s'il te plait.", ephemeral=True)
 
-        if name and color:
+        if name != None and color != None:
             before = role.name
             bcolor = role.color
             await role.edit(name=str(name), color=discord.Color.from_str(str(color)))
@@ -259,13 +257,17 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
             acolor = role.color
             await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.\r\rancien nom : {before}\n nouveau nom : {after}\nancienne couleur : {bcolor}\nnouvelle couleur : {acolor}", ephemeral=True)
 
-        if name is True and color is False:
+        if name == None and color == None:
+            await interaction.response.send_message("spécifie au moins un paramètre, s'il te plait.", ephemeral=True)
+
+
+        if name != None and color == None:
             before = role.name
             await role.edit(name=str(name))
             after = role.name
             await interaction.response.send_message(f"Le rôle {role.mention} a été mis à jour.\r\rancien nom : {before}\n nouveau nom : {after}", ephemeral=True)
 
-        if color is True and name is False:
+        if color != None and name == None:
             bcolor = role.color
             await role.edit(color=discord.Color(int(color)))
             acolor = role.color
@@ -273,13 +275,6 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
 
     else:
         await interaction.response.send_message("Vous n'avez pas encore de rôle. Utilisez /role-get pour en obtenir un.", ephemeral=True)
-
-
-
-
-
-
-
 
 #rps
 @client.tree.command(name="rps", description="[FUN] Shi-Fu-Mi")
@@ -425,7 +420,7 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await asyncio.sleep(5)
             await webhookcreate.delete()
             await edit.delete()
-        if not file == None:
+        if file != None:
             pdp = await file.read()
             webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
             await interaction.response.send_message(content=f"webhook en cours d'envoi dans {interaction.channel}...", ephemeral=True)
@@ -436,7 +431,7 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await asyncio.sleep(5)
             await webhookcreate.delete()
             await edit.delete()
-    if not channel == None:
+    elif channel != None:
         print(file)
         if file == None:
             webhookcreate = await interaction.channel.create_webhook(name=nom, avatar=None,reason="tkt")
@@ -447,7 +442,7 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await editable.edit(content="webhook envoyé!") 
             await asyncio.sleep(5)
             await webhookcreate.delete()
-        if not file == None:
+        if file != None:
             pdp = await file.read()
             webhookcreate = await channel.create_webhook(name=nom, avatar=pdp,reason="tkt")
             await interaction.response.send_message(content=f"webhook en cours d'envoi dans {channel}...", ephemeral=True)
@@ -501,20 +496,11 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
     try:
         e = await fnapi.stats.fetch_by_name(name=pseudo) # type: ignore
     except errors.NotFound as NotFound:
-        # Créer un objet ToastNotifier
-        toaster = ToastNotifier()
 
-        # Afficher une notification
-        toaster.show_toast("Bread Chan : Erreur", f"{NotFound}")
         emb = discord.Embed(title=f"Erreur", description=NotFound, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
     except errors.Forbidden as Forbidden:
-        # Créer un objet ToastNotifier
-        toaster = ToastNotifier()
-
-        # Afficher une notification
-        toaster.show_toast("Bread Chan : Erreur", f"{Forbidden}")
         emb = discord.Embed(title=f"Erreur", description=Forbidden, color=discord.Color.orange())
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
@@ -523,15 +509,16 @@ async def fninfo(interaction: discord.Interaction, pseudo: str, support: app_com
         emb.set_thumbnail(url=f"{interaction.user.avatar}") #type: ignore
         emb.set_author(name=e.user.name, icon_url=e.image_url)
         emb.set_footer(text=f"{client.user}", icon_url=client.user.avatar)
+        emb.add_field(name="Battle Pass", value=f"{e.battle_pass.level}")
         if support.value == "all":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.all.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.all.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.all.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.all.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.all.squad.kills} kills <:FortniteCrosshair:1169734856884887632>\nkills par game : {e.stats.all.overall.kills_per_match}")
         if support.value == "controller":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.gamepad.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.gamepad.duo.kills} kills\nSquad: {e.stats.gamepad.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.gamepad.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.gamepad.duo.kills} kills\nSquad: {e.stats.gamepad.squad.kills} kills <:FortniteCrosshair:1169734856884887632>\nkills par game : {e.stats.gamepad.overall.kills_per_match}")
         if support.value == "keyboard":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.keyboard_mouse.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.keyboard_mouse.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.keyboard_mouse.squad.kills} kills <:FortniteCrosshair:1169734856884887632>") # type: ignore
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.keyboard_mouse.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.keyboard_mouse.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.keyboard_mouse.squad.kills} kills <:FortniteCrosshair:1169734856884887632>\nkills par game : {e.stats.keyboard_mouse.overall.kills_per_match}")
         if support.value == "touch":
-            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.touch.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.touch.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.touch.squad.kills} kills <:FortniteCrosshair:1169734856884887632>")
-        
+            emb.add_field(name="Nombre de kills", value=f"Solo: {e.stats.touch.solo.kills} kills <:FortniteCrosshair:1169734856884887632>\nDuo: {e.stats.touch.duo.kills} kills <:FortniteCrosshair:1169734856884887632>\nSquad: {e.stats.touch.squad.kills} kills <:FortniteCrosshair:1169734856884887632>\nkills par game : {e.stats.touch.overall.kills_per_match}")
+
         await interaction.response.send_message(embed=emb, ephemeral=True) # type: ignore
 
 @client.tree.command(name="brawlstars_profil", description="obtenir des infos sur un compte Brawl Stars")
@@ -753,27 +740,6 @@ class unbanreqview(discord.ui.View):
         self.clear_items()
         await interaction.message.edit(view=self)
 
-last_command_time = None
-@client.tree.command(name="unban_request")
-async def ban_appeal(interaction: discord.Interaction):
-        guild = client.get_guild(1130945537181499542)
-        global last_command_time
-        # Vérifiez si last_command_time est défini et si assez de temps s'est écoulé (une semaine ici)
-        if last_command_time is None or (datetime.datetime.now() - last_command_time) > datetime.timedelta(hours=2):
-                try:
-                    await guild.fetch_ban(discord.Object(interaction.user.id))
-                except discord.errors.NotFound:
-                    await interaction.response.send_message("tu n'es pas banni de La Boulangerie débilus")
-                else:
-                    e = await guild.fetch_ban(discord.Object(interaction.user.id))                
-            # Exécutez la commande
-                    await interaction.response.send_message(f"Tu as été banni pour cette raison : ``{e.reason}``\n\nSouhaite-tu envoyer une demande de débanissement au staff ?", view=unbanreqview(), ephemeral=True)
-            # Mettez à jour last_command_time avec la date actuelle
-                last_command_time = datetime.datetime.now()
-        else:
-            # Informez l'utilisateur qu'il doit attendre
-            await interaction.response.send_message(f"Tu dois encore attendre {datetime.datetime.now() - last_command_time} avant de pouvoir utiliser cette commande.", ephemeral=True)
-
 @client.tree.context_menu(name="Say")
 @app_commands.default_permissions(manage_guild=True)
 async def pins(interaction: discord.Interaction, message: discord.Message):
@@ -781,25 +747,6 @@ async def pins(interaction: discord.Interaction, message: discord.Message):
     await interaction.response.send_modal(say(msg))
     await interaction.channel.typing()
 
-# async def colorautocomplete(interaction: discord.Interaction, current: str):
-#     colorlist = ["0x3498DB"]
-#     
-#     return [
-#         app_commands.Choice(name=i, value=i)
-#         for i in colorlist
-#     ]
-# @client.tree.command(name="role_edit", description="[PREMIUM] permet de modifier votre role unique", guild=guild_id1)
-# @app_commands.autocomplete(role=colorautocomplete)
-# @app_commands.choices(option=[
-#     app_commands.Choice(name="Modifier", value="edit"),
-#     app_commands.Choice(name="Créer", value="create"),
-#     ])
-# async def rolecolorchange(interaction: discord.Interaction, option: app_commands.Choice[str], role: Optional[str]):
-#     await roledumec.edit(color=discord.Color.from_str(str(role)))
-
-#auto events
-
-##module d'edition de messages
 @client.event
 async def on_message_edit(before, after):
     if before.author.bot == True or before.author == client.user or before.content == after.content:
@@ -869,69 +816,10 @@ async def on_member_join(member: discord.Member):
     LBchannel = client.get_channel(1130945537907114139)
     Kchannel = client.get_channel(1129912901847765002)
     statchannel = client.get_channel(1163733415229669376)
-    if member.guild == LBchannel.guild:
-        # Ouvrir l'image
-        await member.avatar.save(f"src/buffer/{member.id}.png")
-        image = Image.open(f"src/buffer/{member.id}.png")
-
-        # Créer un masque circulaire transparent en mode "L" (Luminance)
-        mask = Image.new("L", image.size, 0)
-        draw = ImageDraw.Draw(mask)
-        width, height = image.size
-        circle_radius = min(width, height) // 2
-        circle_center = (width // 2, height // 2)
-        draw.ellipse((circle_center[0] - circle_radius, circle_center[1] - circle_radius, circle_center[0] + circle_radius, circle_center[1] + circle_radius), fill=255)
-
-        # Convertir le masque en image "RGBA" avec un canal alpha
-        mask = mask.convert("L")
-        mask_data = mask.getdata()
-        mask.putdata([pixel for pixel in mask_data])
-
-        # Appliquer le masque transparent à l'image
-        image.putalpha(mask)
-
-        # Enregistrez l'image avec le masque circulaire transparent
-        image.save(f"src/buffer/{member.id}.png")
-
-        # Charger l'image avec le masque circulaire transparent
-        image_with_transparent_circle = Image.open(f"src/buffer/{member.id}.png")
-
-        # Charger l'image de fond
-        background_image = Image.open("src/img/welcomer/synthwave.png")  # Remplacez "background.jpg" par le chemin de votre image de fond
-
-        # Superposer l'image avec le masque circulaire transparent sur l'image de fond
-        background_image.paste(image_with_transparent_circle, (0, 0), image_with_transparent_circle)
-
-        # Convertir l'image en mode RGBA
-        background_image = background_image.convert("RGBA")
-
-        # Créer un objet ImageDraw pour ajouter du texte
-        draw = ImageDraw.Draw(background_image)
-
-        # Charger une police (assurez-vous d'avoir une police TTF installée)
-        font = ImageFont.truetype("src/font/ComicSans.ttf", 28) # Remplacez le chemin et la taille
-
-        # Obtenez le nom du membre à partir de discord.py (remplacez member_obj par l'objet de membre réel)
-
-        member_name = f"Bienvenue sur le serveur {member.display_name} !"
-
-        # Position pour afficher le texte (ajustez selon vos besoins)
-        text_position = (60, 450)
-
-        # Couleur du texte (en RGB)
-        text_color = (255, 255, 255)
-
-        # Ajoutez le texte à l'image
-        draw.text(text_position, member_name, fill=text_color, font=font)
-
-        # Enregistrez l'image superposée
-        background_image.save("src/img/buffer/bienvenue.png")  # Vous pouvez spécifier un chemin de fichier différent si nécessaire
-        file = discord.File("src/img/buffer/bienvenue.png", filename="bienvenue.png")
-        
+    if member.guild == LBchannel.guild:        
         emb=discord.Embed(title="Nouveau pain!", description=f"Un nouveau pain vient de rejoindre ! Bienvenue sur {member.guild.name} {member.display_name}! :french_bread:", color = discord.Color.pink(), timestamp=datetime.datetime.now())
         emb.set_author(name=member.guild.name, icon_url=member.guild.icon, url=f"https://discordapp.com/users/{client.user.id}")
         emb.set_footer(text=client.user, icon_url=client.user.avatar)
-        emb.set_image(url="attachment://bienvenue.png")
         msg = await LBchannel.send(content=f"{member.mention}", file=file, silent=True)
         await msg.add_reaction("<:LBgigachad:1134177726585122857>")
 
@@ -978,63 +866,7 @@ async def on_member_remove(member: discord.Member):
 
 @client.event
 async def on_message(message: discord.Message):
-    luxurechannel = await client.fetch_channel(1132379187227930664)
-    LBstaffrole = luxurechannel.guild.get_role(1130945537227632648)
     e = message.content.casefold()
-
-    if message.author.bot == True:
-        return
-    if message.channel.guild ==luxurechannel.guild:
-        if message.channel.id == 1134102319580069898:
-            await message.create_thread(name=f"QOTD de {message.author.display_name}")
-
-        if message.channel.id == 1130945537907114141:
-            await message.create_thread(name=f"Annonce de {message.author.display_name}")
-            await message.publish()
-
-        if message.channel.id == 1153333206372855818:
-            await message.create_thread(name=f"Annonce de {message.author.display_name}")
-            await message.add_reaction("<:LBgigachad:1134177726585122857>")
-
-        if message.channel == luxurechannel:
-            if LBstaffrole in message.author.roles:
-                if message.attachments:
-                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                    await message.create_thread(name=f"{message.author}")
-                    for i in range(len(emojilist)):
-                        await message.add_reaction(emojilist[i])
-    
-                if not message.attachments:
-                    word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
-                    for i in range(len(word)):
-                        if word[i] in str(message.content):
-                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                            await message.create_thread(name=f"{message.author}")
-                            for i in range(len(emojilist)):
-                                await message.add_reaction(emojilist[i])
-                else:
-                    return
-            else:
-                if message.attachments:
-                    emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                    await message.create_thread(name=f"{message.author}")
-                    for i in range(len(emojilist)):
-                        await message.add_reaction(emojilist[i])
-
-                if not message.attachments:
-                    word = ["discordapp.com", "rule34.xxx", "pornhub.com"]
-                    for i in range(len(word)):
-                        if word[i] in str(message.content):
-                            emojilist = ["<:Upvote:1141354962392199319>","<:Downvote:1141354959372304384>"]
-                            await message.create_thread(name=f"{message.author}")
-                            for i in range(len(emojilist)):
-                                await message.add_reaction(emojilist[i])
-                        else:
-                            await message.delete()
-                            await message.author.send(f"tu n'es pas autorisé à envoyer des messages textuels dans {message.channel.mention}", file=discord.File("src/img/Steam-access-is-denied.webp"))
-
-# en gros, si y a un message, si le message n'a pas été envoyé par moi ou goblet, qu'il est envoyé dans la luxure, et qu'il a pas de pièce jointe, ca le delete
-
     if not message.author.id == 911467405115535411: # fonction qui m'immunise de ces conneries
 
         if " bite" in e:
@@ -1088,9 +920,9 @@ async def on_message(message: discord.Message):
 async def changepresence():
     guild = client.get_guild(1130945537181499542)
     apple = client.get_user(1014832884764393523)
-    clearcount = len([x for x in guild.members if not x.bot])
-    randmember = random.choice(guild.members)
-    randmember2 = random.choice(guild.members)
+    randguild = random.choice(client.guilds)
+    randmember = random.choice(randguild.members)
+    randmember2 = random.choice(randguild.members)
     game = [
             f"{apple.display_name} en train de chialer",
             "Lilo et Nightye sur Smash",
@@ -1099,7 +931,6 @@ async def changepresence():
             "ce bg de Cyrger qui a payé pour mon hébergement",
             "webstrator.com",
             "pas ma mère sur Pornhub !",
-            f"à quoi jouent les {clearcount} membres du serveur",
             "Chainsaw Man sur Crunchyroll",
             "un porno gay avec DraftBot et Dyno",
             "mon 69ème statut.",
@@ -1119,7 +950,6 @@ async def changepresence():
             "Sword Art Online",
             "GobletMurt mettre un balais dans le cul de Milanozore",
             "Enka.Network",
-            f"les {clearcount} membres du serveur !",
             "Lotharie et sa colonne dans le cul",
             "Fenrixx se faire chasser par les furries",
             f"{apple.display_name} qui regarde Alex in Harlem",
@@ -1129,11 +959,11 @@ async def changepresence():
             "Rule34",
             "La Breadmacht envahir la Pologne",
             "Monster Musume",
-            f"l'appendice pénétrant de daddy {guild.owner.name.title()}~ UwU",
+            f"l'appendice pénétrant de daddy {randmember.name.title()}~ UwU",
             "le OnlyFans de Nightye",
             "Chuislay en train de répendre la sainte baguette",
             "mec, je me transforme en sexbot!",
-            f"le journal de {guild.name}",
+            f"le journal de {randguild.name}",
             "Nightye qui a retrouvé le trophée 1m de Wankil",
             f"{randmember.display_name} réduire {randmember2.display_name} en esclavage",
         ]
@@ -1147,6 +977,17 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
+    for guild in client.guilds:
+            # Créez la table si elle n'existe pas
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {guild.id} (
+            user_id VARCHAR(30),
+            role_id VARCHAR(30),
+            PRIMARY KEY (user_id)
+            )
+        ''')
+    conn.commit()
+
     try:
         # Récupère l'émoji.
         # emojiID correspond à l'ID de l'émoji en question.
@@ -1179,8 +1020,9 @@ async def on_ready():
 
         # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
         for i in range(len(emojiIDlist)):
-            e = discord.Object(emojiIDlist[i], type=discord.Emoji)
+            e = guild.get_emoji(emojiIDlist[i])
             await e.edit(roles=[discord.Object(staffrole), discord.Object(botrole), discord.Object(devrole)])
+
     except discord.errors.Forbidden and discord.errors.HTTPException as e:
         print(e)
 
