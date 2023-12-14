@@ -1,10 +1,5 @@
 @import url(https://use.fontawesome.com/releases/v6.4.2/css/all.css);
 
-@font-face {
-  font-family: Minecraft Arial;
-  src: url(../font/Minecraft-Regular.ttf);
-}
-
 form {
   display: flex; /* Utiliser la flexbox pour aligner les éléments horizontalement */
 }
@@ -16,6 +11,50 @@ body {
   background-size: cover;
   background-position: center;
   margin: 0;
+}
+
+.form-control {
+  position: relative;
+  margin: 20px 0 40px;
+  width: 190px;
+}
+
+.form-control input {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 2px #fff solid;
+  display: block;
+  width: 100%;
+  padding: 15px 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.form-control input:focus,
+.form-control input:valid {
+  outline: 0;
+  border-bottom-color: lightblue;
+}
+
+.form-control label {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  pointer-events: none;
+}
+
+.form-control label span {
+  display: inline-block;
+  font-size: 18px;
+  min-width: 5px;
+  color: #fff;
+  transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.form-control input:focus+label span,
+.form-control input:valid+label span {
+  color: lightblue;
+  transform: translateY(-30px);
 }
 
 section {
@@ -63,7 +102,6 @@ header {
 .navbar {
   overflow: hidden;
   background-color: #333;
-  font-family: "Minecraft", sans-serif;
   display: flex;
 }
 
@@ -102,6 +140,18 @@ header {
   border-radius: 25px;
 }
 
+a img {
+  border: 1px solid #ccc; /* Vérifiez la largeur de la bordure */
+  border-radius: 5px;
+}
+
+.aimg {
+  display: inline-block;
+  width: 75px; /* Ajoutez la même largeur que celle de votre image */
+  height: 75px; /* Ajoutez la même hauteur que celle de votre image */
+  overflow: hidden; /* Cela empêchera tout débordement */
+}
+
 .bot-image {
   display: block;
   margin: 0 auto;
@@ -137,16 +187,6 @@ footer p a {
 .search-bar {
   display: flex;
   margin: auto;
-}
-
-div input {
-  float: right;
-  align-items: center;
-  font-family: "Minecraft", sans-serif;
-  border-radius: 10px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  width: 70%;
 }
 
 h1 {
