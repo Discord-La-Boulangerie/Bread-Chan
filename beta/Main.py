@@ -51,14 +51,14 @@ async def identify(self):
     _log.info('Shard ID %s has sent the IDENTIFY payload.', self.shard_id)
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
-guild_id1 = 1130798906586959946
-guild_id = discord.Object(id=1130798906586959946)
-r34py = rule34Py()
+guild_id = 1001496918343553094
+guild_id1 = discord.Object(id=guild_id)
 
 # client def
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
         super().__init__(intents=intents)
+        
         # A CommandTree is a special type that holds all the application command
         # state required to make it work. This is a separate class because it
         # allows all the extra state to be opt-in.
@@ -73,36 +73,26 @@ class MyClient(discord.Client):
     # By doing so, we don't have to wait up to an hour until they are shown to the end-user.
     async def setup_hook(self):
         await self.tree.sync()
-        await self.tree.sync(guild=guild_id)
+        await self.tree.sync(guild=guild_id1)
+
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
-bot = commands.Bot(intents=intents, command_prefix=commands.when_mentioned)
-bot.owner_id=911467405115535411
-blue = discord.Color.from_rgb(0, 0, 200)
-red = discord.Color.from_rgb(200, 0, 0)
-green = discord.Color.from_rgb(0, 200, 0)
-discord_blue = discord.Color.from_rgb(84, 102, 244)
 DiscordWebSocket.identify = identify
 ##commands
-#ping
 
-@client.tree.command(name="rand_r34")
-async def r34(interaction: discord.Interaction, tag1: str, tag2: Optional[str], tag3: Optional[str], tag4: Optional[str], tag5: Optional[str]):
-    #original list
-    taglist = [tag1, tag2, tag3, tag4, tag5]
-    print(taglist)
-    #sublist created with list comprehension
-    taglist_updated = [value for value in taglist if value != None]
-
-    #print  new sublist that doesn't contain 'Python'
-    print(taglist_updated)
-    cul = r34py.random_post(tags=taglist_updated)
-    try:
-        r34py.random_post(tags=taglist_updated)
-    except TypeError as e:
-        await interaction.response.send_message(content=e, ephemeral=True)
-    else:
-        await interaction.response.send_message(content=f"``{str(taglist_updated).replace('[', '').replace(']', '')}``\n\n{cul.image}", ephemeral=True)
+client.tree.command(name="customEmbed", guild=guild_id1)
+async def embedtest(interaction: discord.Interaction, url: str):
+    TestVideoEmbed = {}
+    TestVideoEmbed['type'] = 'video'
+    TestVideoEmbed['url'] = url
+    VideoDict = {}
+    VideoDict['height'] = 480
+    VideoDict['proxy_url'] = f'https://images-ext-1.discordapp.net/external/Tr36h2z0bxXh1JF-DYH6igRBj9SClhe_b1sxIF8CvgA/{url}'
+    VideoDict['url'] = url
+    VideoDict['width'] = 480
+    TestVideoEmbed['video'] = VideoDict
+    CreatedEmbed = discord.Embed.from_dict(TestVideoEmbed)
+    await interaction.response.send_message(embed=CreatedEmbed)
 
 #login check + bot login events
 @client.event
@@ -110,4 +100,4 @@ async def on_ready():
     print("="*10 + "| Build Infos |" + "="*10)
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.releaselevel}")
-client.run(DISCORD_TOKEN)  # type: ignore
+client.run(str(DISCORD_TOKEN))

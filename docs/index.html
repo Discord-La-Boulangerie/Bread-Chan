@@ -16,7 +16,7 @@
         <h1>Welcome to Bread Chan</h1>
         <img class="bot-image" src="src/img/bc.png" alt="Bread Chan" width="75" height="75" title="Bread-Chan" usemap="#logomap">
         <map name="logomap">
-            <area shape="rect" coords="0,0,6000, 6000" href="index.html">
+            <area shape="rect" coords="0,0,6000, 6000" href="index.html" title="Bread-Chan logo">
         </map>
     </header>
       <nav class="navbar">
@@ -27,18 +27,18 @@
           <li><a href="pages/about.html"><i class="fa-solid fa-circle-info"></i> A propos</a></li>
           <li><a href="https://github.com/Discord-La-Boulangerie/Bread-Chan" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Github repo</a></li>
         </ul>
-        <div class="form-control">
-            <input class="searchInput" type="value" required="">
-            <label>
-                <span style="transition-delay:0ms">S</span><span style="transition-delay:50ms">e</span><span style="transition-delay:100ms">a</span><span style="transition-delay:150ms">r</span><span style="transition-delay:200ms">c</span><span style="transition-delay:250ms">h</span>
-            </label>
+        <div class="search-bar">
+            <form>
+                <input type="text" id="search-input" placeholder="Search...">
+                    <button id="sub-button" type="submit" onclick="searchPage()">Search</button>
+            </form>
         </div>
       </nav>    
     <div class="container">
         <section id="features">
             <h2><a href="pages/features.html"><i class="fa-solid fa-arrow-up-from-bracket"></i> Fonctionnalités</a></h2>
             <p>Explore les Fonctionnalités de Bread Chan.</p>
-            <!-- Add more content about the bot's features here -->
+            
         </section>
 
         <section id="commands">

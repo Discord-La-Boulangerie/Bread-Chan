@@ -1,7 +1,7 @@
-document.getElementById("searchInput").addEventListener("keyup", function () {
+function searchPage() {
     let input, filter, sections;
     input = document.getElementById("searchInput");
-    filter = input.value.toUpperCase();
+    filter = input.value
     sections = document.querySelectorAll("section");
 
     for (var i = 0; i < sections.length; i++) {
