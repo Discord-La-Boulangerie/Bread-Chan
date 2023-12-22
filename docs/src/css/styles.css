@@ -66,17 +66,6 @@ section {
   height: 100%;
 }
 
-
-#sub-button {
-  border-radius: 10px;
-  padding: 8px 15px; /* Ajuster le rembourrage selon vos préférences */
-  margin-left: 5px; /* Ajouter un espace entre l'input et le bouton */
-  border: 1px solid #ccc;
-  background-color: #4caf50; /* Ajouter une couleur de fond au bouton */
-  color: white; /* Ajouter une couleur de texte au bouton */
-  cursor: pointer; /* Afficher un pointeur au survol du bouton */
-}
-
 footer div a {
   margin: 0 10px;
   border-radius: 50%;
@@ -105,17 +94,20 @@ header {
   display: flex;
 }
 
-.navbar button {
-  background-color: #333;
-  color: #fff;
-  padding: 10px 0;
-  display: flex;
-  justify-content: space-between;
-  border: none;
+.navbar a {
+  float: left;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  transition: 0.5s;  
 }
 
 .navbar a:hover {
-    background-color: lightblue;
+  background-color: lightblue;
+  transform: translateY(-5px);
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 
@@ -124,20 +116,15 @@ header {
   padding: 0;
 }
 
-.navbar li {
+.navbar ul li {
   display: inline;
   margin: 0 20px;
 }
 
-.navbar a {
-  float: left;
-  font-size: 16px;
-  color: white;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  transition: 0.3s;
-  border-radius: 25px;
+
+
+#commandtableau {
+  border: none;
 }
 
 a img {
@@ -188,6 +175,25 @@ footer p a {
   display: flex;
   margin: auto;
 }
+/* Style de base pour l'élément input */
+.search-bar[type="text"]:focus {
+  width: 200px;
+  padding: 10px;
+  margin: 20px;
+  border: 2px solid; /* Bordure par défaut */
+  border-radius: 5px;
+  animation: rgbAnimation 2s infinite alternate; /* Animation pour changer la couleur */
+}
+  
+  /* Animation pour alterner la couleur de la bordure */
+@keyframes rgbAnimation {
+  0% { border-color: rgb(255, 0, 0); } /* Rouge */
+  33% { border-color: rgb(0, 255, 0); } /* Vert */
+  66% { border-color: rgb(0, 0, 255); } /* Bleu */
+  100% { border-color: rgb(255, 0, 0); } /* Retour au rouge */
+}
+
+
 
 h1 {
   text-align: center;

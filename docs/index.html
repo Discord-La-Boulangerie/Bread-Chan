@@ -16,24 +16,23 @@
         <h1>Welcome to Bread Chan</h1>
         <img class="bot-image" src="src/img/bc.png" alt="Bread Chan" width="75" height="75" title="Bread-Chan" usemap="#logomap">
         <map name="logomap">
-            <area shape="rect" coords="0,0,6000, 6000" href="index.html" title="Bread-Chan logo">
+            <area shape="rect" coords="0,0,6000, 6000" href="/" title="Bread-Chan logo">
         </map>
     </header>
-      <nav class="navbar">
-        <ul>
-          <li><a href="https://wishrito.github.io/Bread-Chan/"><i class="fa-solid fa-house-chimney"></i> Accueil</a></li>
-          <li><a href="pages/features.html"><i class="fa-solid fa-arrow-up-from-bracket"></i> Fonctionnalités</a></li>
-          <li><a href="pages/commands.html"><i class="fa-solid fa-gear fa-spin"></i> Commandes</a></li>
-          <li><a href="pages/about.html"><i class="fa-solid fa-circle-info"></i> A propos</a></li>
-          <li><a href="https://github.com/Discord-La-Boulangerie/Bread-Chan" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Github repo</a></li>
-        </ul>
-        <div class="search-bar">
-            <form>
-                <input type="text" id="search-input" placeholder="Search...">
-                    <button id="sub-button" type="submit" onclick="searchPage()">Search</button>
-            </form>
-        </div>
-      </nav>    
+        <nav class="navbar">
+            <ul class="navbar-list" id="navbarList">
+                <li><a href="https://wishrito.github.io/Bread-Chan/"><i class="fa-solid fa-house-chimney"></i> Accueil</a></li>
+                <li><a href="pages/features.html"><i class="fa-solid fa-arrow-up-from-bracket"></i> Fonctionnalités</a></li>
+                <li><a href="pages/commands.html"><i class="fa-solid fa-gear fa-spin"></i> Commandes</a></li>
+                <li><a href="pages/about.html"><i class="fa-solid fa-circle-info"></i> A propos</a></li>
+                <li><a href="https://github.com/Discord-La-Boulangerie/Bread-Chan" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Github repo</a></li>
+            </ul>
+            <div class="search-bar">
+                <form>
+                    <input type="text" id="search-input" placeholder="Search...">
+                </form>
+            </div>
+        </nav>    
     <div class="container">
         <section id="features">
             <h2><a href="pages/features.html"><i class="fa-solid fa-arrow-up-from-bracket"></i> Fonctionnalités</a></h2>
@@ -72,6 +71,7 @@
             </a>
         </div>
     </footer>
+    <script src="src/scripts/hamburger.js"></script>
     <script src="src/scripts/search.js"></script>
 </body>
 </html>
