@@ -30,10 +30,13 @@ body {
   color: #fff;
 }
 
-.form-control input:focus,
-.form-control input:valid {
-  outline: 0;
-  border-bottom-color: lightblue;
+/* Style de base pour l'élément input */
+.search-bar input {
+  width: 200px;
+  padding: 10px;
+  margin: 20px;
+  border: 2px solid; /* Bordure par défaut */
+  border-radius: 5px;
 }
 
 .form-control label {
@@ -101,12 +104,12 @@ header {
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
-  transition: 0.5s;  
+  transition: 0.75s;  
 }
 
 .navbar a:hover {
   background-color: lightblue;
-  transform: translateY(-5px);
+  transform: translateY(-5px)translateX(5px);
   box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -121,7 +124,33 @@ header {
   margin: 0 20px;
 }
 
+.navbar-list#navbarList li:first-child a {
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px
+}
 
+.navbar-list#navbarList li:last-child a {
+  border-top-right-radius: 25px;
+  border-bottom-right-radius: 25px
+}
+
+/* Media query pour les écrans ayant une largeur maximale de 768px (commun pour les téléphones) */
+@media only screen and (max-width: 768px) {
+  .navbar {
+    flex-direction: column; /* Flex direction verticale pour les écrans de 768px ou moins */
+  }
+
+  .navbar ul li {
+    display: block; /* Les éléments li sont affichés en bloc */
+    margin: 10px 0; /* Marge supérieure et inférieure pour espacement */
+    transition: 0.75s;
+  }
+  .navbar-list#navbarList a {
+    background-color: none;
+  }
+
+  /* Ajoutez d'autres styles pour les éléments de la navbar sur mobile ici si nécessaire */
+}
 
 #commandtableau {
   border: none;
@@ -175,25 +204,6 @@ footer p a {
   display: flex;
   margin: auto;
 }
-/* Style de base pour l'élément input */
-.search-bar[type="text"]:focus {
-  width: 200px;
-  padding: 10px;
-  margin: 20px;
-  border: 2px solid; /* Bordure par défaut */
-  border-radius: 5px;
-  animation: rgbAnimation 2s infinite alternate; /* Animation pour changer la couleur */
-}
-  
-  /* Animation pour alterner la couleur de la bordure */
-@keyframes rgbAnimation {
-  0% { border-color: rgb(255, 0, 0); } /* Rouge */
-  33% { border-color: rgb(0, 255, 0); } /* Vert */
-  66% { border-color: rgb(0, 0, 255); } /* Bleu */
-  100% { border-color: rgb(255, 0, 0); } /* Retour au rouge */
-}
-
-
 
 h1 {
   text-align: center;
