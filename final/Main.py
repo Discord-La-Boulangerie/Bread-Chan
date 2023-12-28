@@ -33,7 +33,7 @@ import sqlite3
 load_dotenv()
 
 # Configuration de la base de données SQLite
-conn = sqlite3.connect('database.db')
+conn = sqlite3.connect("database/database.sqlite")
 
 cursor = conn.cursor()
 
@@ -126,7 +126,7 @@ r34py = rule34Py()
 
 ##commands
 #ping
-@client.tree.command(name="cash", description="[FUN] indique combien d'argent en cash possède l'utilisateur", guild=guild_id1)
+@client.tree.command(name="cash", description="[FUN] indique combien d'argent en cash possède l'utilisateur")
 async def unbcash(interaction: discord.Interaction, user: Optional[discord.Member]):
     if user == None:
         user_balance = await unbclient.get_user_balance(guild_id=guild_id, user_id=interaction.user.id)
@@ -202,38 +202,35 @@ async def sendrule(interaction: discord.Interaction):
 
 #custom role system
 
-# Commande pour obtenir un rôle
+# Crée la table de la base de données si elle n'existe pas
+cursor.execute('''CREATE TABLE IF NOT EXISTS guild_roles (guild_id INTEGER, user_id INTEGER, role_id INTEGER)''')
+conn.commit()
+
 @client.tree.command(name="role-get", description="te donne un rôle custom")
 async def get_role(interaction: discord.Interaction):
 
-    # Vérifiez si l'utilisateur a déjà un rôle
-    cursor.execute(f"SELECT role_id FROM {interaction.guild.id} WHERE user_id = {str(interaction.user.id)}")
+    # Vérifie si l'utilisateur a déjà un rôle
+    cursor.execute(f"SELECT role_id FROM guild_roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
     result = cursor.fetchone()
 
     if result:
         await interaction.response.send_message("Vous avez déjà un rôle.", ephemeral=True)
     else:
-        # Créer un nouveau rôle et l'ajouter à l'utilisateur
+        # Crée un nouveau rôle et l'ajoute à l'utilisateur
         role = await interaction.guild.create_role(name=f"{interaction.user.name}'s Role")
         try:
             await role.edit(position=interaction.user.top_role.position)
-        except Forbidden as forb:
+        except discord.Forbidden as forb:
             await interaction.response.send_message(forb)
             
         await interaction.user.add_roles(role)
 
-        # Stocker l'identifiant du rôle dans la base de données
-        cursor.execute(f"INSERT INTO {interaction.guild.id} (user_id, role_id) VALUES ({interaction.user.id}, {role.id})")
+        # Stocke l'identifiant du rôle dans la base de données
+        cursor.execute(f"INSERT INTO guild_roles (guild_id, user_id, role_id) VALUES (?, ?, ?)",
+                       (interaction.guild.id, interaction.user.id, role.id))
         conn.commit()
         await interaction.response.send_message("Vous avez obtenu un nouveau rôle.", ephemeral=True)
 
-@client.tree.command(name="reboot", guild=bc_supportguild)
-@app_commands.default_permissions(administrator=True)
-async def reboot(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{client.user.name} va redémarrer dans 5 secondes.", ephemeral=True)
-    await asyncio.sleep(5)
-    await client.close()
-    client.run(str(DISCORD_TOKEN))
 
 # Commande pour configurer le nom et la couleur du rôle
 @client.tree.command(name="role-setup", description="permet de configurer le rôle que tu t'es attribué")
@@ -242,7 +239,7 @@ async def reboot(interaction: discord.Interaction):
 async def setup_role(interaction: discord.Interaction, name: Optional[str] = None, color: Optional[str] = None):
     # Vérifiez si l'utilisateur a déjà un rôle
 
-    cursor.execute(f"SELECT role_id FROM {interaction.guild.id} WHERE user_id = {str(interaction.user.id)}")
+    cursor.execute(f"SELECT role_id FROM guild_roles WHERE user_id = {interaction.user.id} AND guild_id = {interaction.guild.id}")
     result = cursor.fetchone()
     if result:
 
@@ -269,7 +266,7 @@ async def setup_role(interaction: discord.Interaction, name: Optional[str] = Non
 
         if color != None and name == None:
             bcolor = role.color
-            await role.edit(color=discord.Color(int(color)))
+            await role.edit(color=discord.Color.from_str(str(color)))
             acolor = role.color
             await interaction.response.send_message(f"Le {role.mention} a été mis à jour.\r\rancienne couleur : {bcolor}\rnouvelle couleur : {acolor}", ephemeral=True)
 
@@ -453,11 +450,11 @@ async def webhhooktroll(interaction: discord.Interaction, texte: str, nom: str, 
             await asyncio.sleep(5)
             await webhookcreate.delete()
 
-@client.tree.command(name="blague_random", description="test")
-async def randjoke(interaction: discord.Interaction):
+@client.tree.command(name="blague_random", description="envoie une blague au hasard")
+async def randjoke(interaction: discord.Interaction, public: bool):
     blague = await blclient.random()
     emb = discord.Embed(title="Blague Random 🎲", description=f"{blague.joke}\n\n||{blague.answer}||")
-    await interaction.response.send_message(embed=emb, ephemeral=True)
+    await interaction.response.send_message(embed=emb, ephemeral=public)
 
 async def blague_autocomplete(interaction: discord.Interaction, current: str):
     randresponse = ['GLOBAL', 'DEV', 'DARK', 'LIMIT', 'BEAUF', 'BLONDES']
@@ -469,12 +466,12 @@ async def blague_autocomplete(interaction: discord.Interaction, current: str):
 
 @client.tree.command(name="blague", description="envoie une blague d'un type spécifié")
 @app_commands.autocomplete(choix=blague_autocomplete)
-async def joke(interaction: discord.Interaction, choix: str):
+async def joke(interaction: discord.Interaction, choix: str, public: bool):
     blague = await blclient.random_categorized(choix.casefold())
     emb = discord.Embed(title=f"Blague Random {choix}", description=f"{blague.joke}\n\n||{blague.answer}||")
-    await interaction.response.send_message(embed=emb, ephemeral=True)
+    await interaction.response.send_message(embed=emb, ephemeral=public)
 
-@client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree")
+@client.tree.command(name="sync", description="[MODERATION] permet de synchroniser le tree", guild=bc_supportguild)
 @app_commands.default_permissions(manage_guild=True)
 async def sync(interaction: discord.Interaction):
     await client.tree.sync(guild=guild_id1)
@@ -977,17 +974,6 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
-    for guild in client.guilds:
-            # Créez la table si elle n'existe pas
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS {guild.id} (
-            user_id VARCHAR(30),
-            role_id VARCHAR(30),
-            PRIMARY KEY (user_id)
-            )
-        ''')
-    conn.commit()
-
     try:
         # Récupère l'émoji.
         # emojiID correspond à l'ID de l'émoji en question.

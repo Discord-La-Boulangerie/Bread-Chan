@@ -11,23 +11,37 @@ body {
   background-size: cover;
   background-position: center;
   margin: 0;
+  background-repeat: no-repeat;
 }
 
 .form-control {
   position: relative;
   margin: 20px 0 40px;
   width: 190px;
-}
+  &input {
+    background-color: transparent;
+    border: 0;
+    border-bottom: 2px #fff solid;
+    display: block;
+    width: 100%;
+    padding: 15px 0;
+    font-size: 18px;
+    color: #fff;
+  }
 
-.form-control input {
-  background-color: transparent;
-  border: 0;
-  border-bottom: 2px #fff solid;
-  display: block;
-  width: 100%;
-  padding: 15px 0;
-  font-size: 18px;
-  color: #fff;
+  &label {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    pointer-events: none;
+    &span {
+      display: inline-block;
+      font-size: 18px;
+      min-width: 5px;
+      color: #fff;
+      transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+  }
 }
 
 /* Style de base pour l'élément input */
@@ -37,21 +51,6 @@ body {
   margin: 20px;
   border: 2px solid; /* Bordure par défaut */
   border-radius: 5px;
-}
-
-.form-control label {
-  position: absolute;
-  top: 15px;
-  left: 0;
-  pointer-events: none;
-}
-
-.form-control label span {
-  display: inline-block;
-  font-size: 18px;
-  min-width: 5px;
-  color: #fff;
-  transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .form-control input:focus+label span,
@@ -95,6 +94,15 @@ header {
   overflow: hidden;
   background-color: #333;
   display: flex;
+  &a {
+    float: left;
+    font-size: 16px;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.75s;  
+  }
 }
 
 .navbar a {
@@ -138,39 +146,40 @@ header {
 @media only screen and (max-width: 768px) {
   .navbar {
     flex-direction: column; /* Flex direction verticale pour les écrans de 768px ou moins */
+    &ul li {
+      display: block;
+      margin: 10px 0;
+      }
   }
 
-  .navbar ul li {
-    display: block; /* Les éléments li sont affichés en bloc */
-    margin: 10px 0; /* Marge supérieure et inférieure pour espacement */
-    transition: 0.75s;
-  }
+
   .navbar-list#navbarList a {
     background-color: none;
   }
-
-  /* Ajoutez d'autres styles pour les éléments de la navbar sur mobile ici si nécessaire */
 }
+
 
 #commandtableau {
   border: none;
 }
 
-a img {
+.aimg {
   border: 1px solid #ccc; /* Vérifiez la largeur de la bordure */
   border-radius: 5px;
-}
-
-.aimg {
   display: inline-block;
-  width: 75px; /* Ajoutez la même largeur que celle de votre image */
-  height: 75px; /* Ajoutez la même hauteur que celle de votre image */
-  overflow: hidden; /* Cela empêchera tout débordement */
+  width: 75px;
+  height: 75px;
+  overflow: hidden;
 }
 
 .bot-image {
   display: block;
   margin: 0 auto;
+  transition: 0.5s;
+  &:hover {
+    animation: shake ease-in-out infinite;
+  }
+  
 }
 
 #lib ul a {
@@ -231,6 +240,13 @@ section a {
   color: inherit;
 }
 
+.lib {
+  display: flex;
+  height: fit-content;
+}
+.AsideDiscordEmbed {
+  margin-right: auto;
+}
 
 /* Barre de défilement */
 ::-webkit-scrollbar {
@@ -269,18 +285,45 @@ section a {
   --color: #000000
 }
 
-i.fa-brands.fa-linkedin-in:hover {
-  transform: scale(1.2);
+i {
+  &.fa-brands.fa-linkedin-in {
+    transition: 0.5s;
+    &:hover {
+      transform: scale(1.2);
+      transform: rotate(360deg);
+    }
+  }
+  &.fa-brands.fa-x-twitter {
+    transition: 0.5s;
+    &:hover {
+      transform: scale(1.2);
+      transform: rotate(360deg);
+    }
+  }
+  &.fa-brands.fa-discord {
+    transition: 0.5s;
+    &:hover {
+      transform: scale(1.2);
+      transform: rotate(360deg);
+    }
+  }
+  &.fa-brands.fa-github {
+    transition: 0.5s;
+    &:hover {
+      transform: scale(1.2);
+      transform: rotate(360deg);
+    }
+  }
 }
 
-i.fa-brands.fa-x-twitter:hover {
-  transform: scale(1.2);
-}
-
-i.fa-brands.fa-discord:hover {
-  transform: scale(1.2);
-}
-
-i.fa-brands.fa-github:hover {
-  transform: scale(1.2);
+@keyframes shake {
+  0%, 100% {
+    transform: rotate(0); /* Aucun déplacement horizontal au début et à la fin de l'animation */
+  }
+  25%, 75% {
+    transform: rotate(-30deg); /* Déplacement horizontal de -10px au quart et trois quarts de l'animation */
+  }
+  50% {
+    transform: rotate(30deg); /* Déplacement horizontal de 10px à la moitié de l'animation */
+  }
 }
