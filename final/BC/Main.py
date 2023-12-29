@@ -2,7 +2,6 @@
 import os, sys
 import datetime
 import random
-from time import sleep
 from dotenv import load_dotenv
 from typing import List, Optional
 from io import BytesIO
@@ -81,7 +80,6 @@ async def identify(self):
 # tokens
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
-VANGUARD_TOKEN = os.getenv("vanguard_token")
 BLAGUES_TOKEN = os.getenv("blagues_api_token")
 BS_TOKEN = os.getenv("bs_api_token")
 FN_TOKEN = os.getenv("fn_token")
@@ -107,32 +105,9 @@ class MyClient(discord.Client):
     async def setup_hook(self):
         await self.tree.sync()
         await self.tree.sync(guild=guild_id1)
-
-# discord client def
-class VanguardClient(discord.Client):
-    def __init__(self, *, intents: discord.Intents):
-        super().__init__(intents=intents)
-        
-        # A CommandTree is a special type that holds all the application command
-        # state required to make it work. This is a separate class because it
-        # allows all the extra state to be opt-in.
-        # Whenever you want to work with application commands, your tree is used
-        # to store and work with them.
-        # Note: When using commands.Bot instead of discord.Client, the bot will
-        # maintain its own tree instead.
-        self.tree = app_commands.CommandTree(self)
-
-    # In this basic example, we just synchronize the app commands to one guild.
-    # Instead of specifying a guild to every command, we copy over our global commands instead.
-    # By doing so, we don't have to wait up to an hour until they are shown to the end-user.
-    async def setup_hook(self):
-        await self.tree.sync()
-
 applicationid = 1102573935658283038
 intents = discord.Intents.all()
 client = MyClient(intents=intents)
-vang_client = VanguardClient(intents=intents)
-
 guild_id = 1130945537181499542
 guild_id1 = discord.Object(id=guild_id)
 sio_guild_id = 1163111703689576541
@@ -935,18 +910,22 @@ async def on_message(message: discord.Message):
             await message.channel.send(content=f"résolution du Tiktok envoyé par {message.author.display_name}[:]({vxTiktokResolver})")
             await message.delete()
 
-#    if message.channel.id == 1130945537907114145 and message.attachments:
-#        if random.randint(1, 50) == 1:
-#            await message.add_reaction(random.choice(client.emojis))
+    if message.channel.id == 1130945537907114145 and message.attachments:
+        if random.randint(1, 50) == 1:
+            await message.add_reaction(random.choice(client.emojis))
 
 #auto tasks
 
 @tasks.loop(seconds=20)  # Temps entre l'actualisation des statuts du bot
 async def changepresence():
+    guild = client.get_guild(1130945537181499542)
+    apple = client.get_user(1014832884764393523)
     randguild = random.choice(client.guilds)
     randmember = random.choice(randguild.members)
     randmember2 = random.choice(randguild.members)
     game = [
+            f"{apple.display_name} en train de chialer",
+            "Lilo et Nightye sur Smash",
             "Amouranth, mais pas sur Twitch",
             "Amouranth dire que JDG ressemble à un ananas",
             "ce bg de Cyrger qui a payé pour mon hébergement",
@@ -956,7 +935,10 @@ async def changepresence():
             "un porno gay avec DraftBot et Dyno",
             "mon 69ème statut.",
             "maman, je passe à la télé !",
+            f"{guild.owner.display_name}, traverse la rue et tu trouveras du travail",
             "pas Boku No Pico",
+            "Wishrito se faire enculer sur Fortnite pendant que GobletMurt regarde",
+            f"{guild.owner.display_name} toucher de l'herbe (c'est faux)",
             "Alan faire du bon contenu",
             "les nudes de DraftBot",
             "Fallen Condoms",
@@ -966,12 +948,23 @@ async def changepresence():
             "Mee6 sous la douche~",
             "un documentaire sur Auschwitz",
             "Sword Art Online",
+            "GobletMurt mettre un balais dans le cul de Milanozore",
             "Enka.Network",
+            "Lotharie et sa colonne dans le cul",
+            "Fenrixx se faire chasser par les furries",
+            f"{apple.display_name} qui regarde Alex in Harlem",
+            "Maniak troller Lotharie",
+            "Krypto qui est perdu",
             "les muscles saillants des staff",
             "Rule34",
+            "La Breadmacht envahir la Pologne",
             "Monster Musume",
+            f"l'appendice pénétrant de daddy {randmember.name.title()}~ UwU",
             "le OnlyFans de Nightye",
+            "Chuislay en train de répendre la sainte baguette",
             "mec, je me transforme en sexbot!",
+            f"le journal de {randguild.name}",
+            "Nightye qui a retrouvé le trophée 1m de Wankil",
             f"{randmember.display_name} réduire {randmember2.display_name} en esclavage",
         ]
     activity = discord.Activity(type = discord.ActivityType.watching, name=random.choice(game))
@@ -984,12 +977,53 @@ async def on_ready():
     print(f"Connecté en tant que {client.user.display_name} ({client.user.id})") #type: ignore
     print(f"Discord info : {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} | {discord.version_info.releaselevel}")
     await changepresence.start()
+    for guild in client.guilds:
+            # Créez la table si elle n'existe pas
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {guild.id} (
+            user_id VARCHAR(30),
+            role_id VARCHAR(30),
+            PRIMARY KEY (user_id)
+            )
+        ''')
+    conn.commit()
 
-@vang_client.event
-async def on_guild_update(before, after):
-    if before.guild.icon != after.guild.icon:
-        variable = await after.guild.icon.read()
-        await vang_client.user.edit(avatar=variable)
+    try:
+        # Récupère l'émoji.
+        # emojiID correspond à l'ID de l'émoji en question.
+        emojiIDlist =[
+            1136229377399603210,
+            1163003539715534929,
+            1138549194550952048,
+            1136234211976695888,
+            1136241845899374722,
+            1136247065291268147,
+            1136241241781186632,
+            1139089457086210118,
+            1136242676195406015,
+            1136229172935659640,
+            1136232472418455622,
+            1136236032455606364,
+            1136232168402735234,
+            1136234618417328218,
+            1136233292899819532
+            ]
+        
+        # guildID correspond à l'ID du serveur où se trouve l'émoji.
+        guild = await client.fetch_guild(guild_id)
+
+        # Récupère le rôle.
+        # roleID correspond à l'ID du rôle qui doit avoir accès à l'émoji.
+        staffrole = 1130945537215053942
+        botrole = 1130945537194078316
+        devrole = 1130945537181499543
+
+        # Ajoute le rôle à la liste des rôles ayant accès à l'émoji.
+        for i in range(len(emojiIDlist)):
+            e = guild.get_emoji(emojiIDlist[i])
+            await e.edit(roles=[discord.Object(staffrole), discord.Object(botrole), discord.Object(devrole)])
+
+    except discord.errors.Forbidden and discord.errors.HTTPException as e:
+        print(e)
 
 client.run(str(DISCORD_TOKEN))
-vang_client.run(str(VANGUARD_TOKEN))
