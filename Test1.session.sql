@@ -1,1 +1,0 @@
-SELECT user_name FROM guild_members WHERE top_role_id = 1181664586806603846

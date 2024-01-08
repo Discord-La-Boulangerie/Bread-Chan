@@ -1,0 +1,1 @@
+UPDATE guild_welc SET img_url = "https://cdn.discordapp.com/attachments/1117058816509476945/1193284204591583273/wT6ExRwN_400x400.jpg" WHERE guild_id = 1124028402639314967
