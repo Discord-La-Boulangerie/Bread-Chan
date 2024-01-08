@@ -1,3 +1,4 @@
+from turtle import listen
 import discord
 from discord.ext import tasks
 import json
@@ -74,7 +75,7 @@ async def EpicNotifier(client: discord.Client):
     # Chargement des informations de la base de données depuis le fichier JSON
     with open('credentials.json', 'r') as fichier:
         donnees_json = json.load(fichier)
-    
+
     # Connexion à la base de données
     connexion = mysql.connector.connect(**donnees_json)
     curseur = connexion.cursor()
