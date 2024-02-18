@@ -18,7 +18,7 @@ import datetime
 # import des API
 import enkanetwork as enk
 import discord
-from discord import app_commands
+from discord import ChannelType, app_commands
 from discord.ext import tasks
 from discord.gateway import DiscordWebSocket, _log
 
@@ -589,8 +589,9 @@ async def auto_role_setup(interaction: discord.Interaction, role_1: Optional[dis
 @app_commands.guild_only()
 @app_commands.default_permissions(manage_guild=True)
 async def say(interaction: discord.Interaction, message: discord.Message):
-    await interaction.response.send_modal(ClassModule.say(message))
-    await interaction.channel.typing()
+    if interaction.channel and interaction.channel.type == ChannelType.text:
+        await interaction.response.send_modal(ClassModule.Say(message))
+        await interaction.channel.typing()
 
 # events
 @client.event
@@ -615,56 +616,46 @@ async def on_member_join(member: discord.Member):
     curseur.execute(select_request)
     result = curseur.fetchone()
 
-    if result:
-        if bool(result[0]) is True:
-            member_name = member.name
-            member_display_name = member.display_name
-            member_mention = member.mention
-            guild_name = member.guild.name
-            created_at = member.created_at
+    if result and bool(result[0]) is True:
+        member_name = member.name
+        member_display_name = member.display_name
+        member_mention = member.mention
+        guild_name = member.guild.name
+        created_at = member.created_at
+        # Use Prepared Statements for SQL Queries
+        select_request = f"SELECT welcome_channel_id, welcome_message, img_url FROM guild_welc WHERE guild_id = {member.guild.id}"
+        curseur.execute(select_request)
+        result = curseur.fetchone()
+        MSG = ''
+        emb = discord.Embed()
+        # Handle Embed Description Properly
+        if result is not None:
+            if result[1]:
+                MSG = result[1]
+            if result[2]:
+                image_url = result[2]
+                emb.set_image(url=image_url)
+        emb.description = eval(f"f'{MSG}'")  # Directly assign MSG to emb.description
+        channel = None  # Initialize channel as None
+        if result:
+            if result[0]:
+                channel = member.guild.get_channel(result[0])
+        if channel:
+            await channel.send(embed=emb)
+        select_request = f"SELECT role_1, role_2, role_3, role_4 FROM auto_roles WHERE guild_id = {member.guild.id}"
+        curseur.execute(select_request)
+        result = curseur.fetchone()
+        # Original list
+        roleList = [result[0], result[1], result[2], result[3]] if result is not None else []
+        # Sublist created with list comprehension
+        # Define new sublist that doesn't contain None
+        roleList_updated = [value for value in roleList if value is not None]
+        for i in roleList_updated:
+            await member.add_roles(discord.Object(i))
 
-            # Use Prepared Statements for SQL Queries
-            select_request = f"SELECT welcome_channel_id, welcome_message, img_url FROM guild_welc WHERE guild_id = {member.guild.id}"
-            curseur.execute(select_request)
-            result = curseur.fetchone()
-            MSG = ''
-            emb = discord.Embed()
+        connexion.commit()
+        connexion.close()   
 
-            # Handle Embed Description Properly
-            if result is not None:
-                if result[1]:
-                    MSG = result[1]
-                if result[2]:
-                    image_url = result[2]
-                    emb.set_image(url=image_url)
-
-
-            emb.description = eval(f"f'{MSG}'")  # Directly assign MSG to emb.description
-            channel = None  # Initialize channel as None
-            if result:
-                if result[0]:
-                    channel = member.guild.get_channel(result[0])
-
-            if channel:
-                await channel.send(embed=emb)
-
-            select_request = f"SELECT role_1, role_2, role_3, role_4 FROM auto_roles WHERE guild_id = {member.guild.id}"
-            curseur.execute(select_request)
-            result = curseur.fetchone()
-
-            # Original list
-            roleList = [result[0], result[1], result[2], result[3]] if result is not None else []
-
-            # Sublist created with list comprehension
-            # Define new sublist that doesn't contain None
-            roleList_updated = [value for value in roleList if value is not None]
-            for i in roleList_updated:
-                await member.add_roles(discord.Object(i))
-    
-            connexion.commit()
-            connexion.close()   
-        else:
-            return
 
 @client.event
 async def on_member_remove(member: discord.Member):
@@ -711,7 +702,7 @@ async def on_member_remove(member: discord.Member):
                 if result[0]:
                     channel = member.guild.get_channel(result[0])
 
-            if channel:
+            if channel and channel.type == ChannelType.text:
                 await channel.send(embed=emb)
 
             connexion.commit()
@@ -722,7 +713,7 @@ async def on_member_remove(member: discord.Member):
 @client.event
 async def on_message(message: discord.Message):
     e = message.content.casefold()
-
+    
     async def send_typing_sleep_reply(content: str, sleep_time: float = 1):
         async with message.channel.typing():
             await asyncio.sleep(sleep_time)

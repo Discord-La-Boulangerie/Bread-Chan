@@ -1,3 +1,4 @@
+import datetime
 import os
 import discord
 from dotenv import load_dotenv
@@ -7,13 +8,13 @@ from typing import cast, Optional
 
 class RiskVar:
     def __init__(self):
-        load_dotenv()
-        self.DISCORD_TOKEN = os.getenv("discord_token")
+        pass
 
     def get_variable_privee(self):
-        return self.DISCORD_TOKEN
+        load_dotenv()
+        return os.getenv("discord_token")
 
-class say(discord.ui.Modal, title="contenu du reply"):
+class Say(discord.ui.Modal, title="contenu du reply"):
     def __init__(self, msg):
         self.msg = msg
         super().__init__()
@@ -85,7 +86,7 @@ class WelcomeModal(discord.ui.Modal):
             else:
                 insert_request = "INSERT INTO guild_welc (guild_id"
 
-                values = [interaction.guild.id]
+                values: list[int | str | bool] = [interaction.guild.id]
                 
                 if value is not None:
                     insert_request += ", welcome_channel_id"
