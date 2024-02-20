@@ -1,5 +1,4 @@
 import re
-import select
 import ClassModule
 from ClassModule import RiskVar
 
@@ -12,7 +11,6 @@ import json
 import asyncio
 import sys
 import os
-from dotenv import load_dotenv
 import datetime
 
 # import des API
@@ -409,7 +407,7 @@ async def gameNotifier(interaction: discord.Interaction, option: Optional[bool] 
         curseur.execute(request)
         result = curseur.fetchone()
         print(result)
-        if result is not None:
+        if result is not None and interaction.guild:
             base_request = "INSERT INTO auto_roles (guild_id"
             values = [interaction.guild.id]
 
@@ -487,7 +485,7 @@ async def gameNotifier(interaction: discord.Interaction, option: Optional[bool] 
 @app_commands.guild_only()
 @app_commands.default_permissions(manage_guild=True)
 async def auto_role_setup(interaction: discord.Interaction, role_1: Optional[discord.Role] = None, role_2: Optional[discord.Role] = None, role_3: Optional[discord.Role] = None, role_4: Optional[discord.Role] = None, enabled: bool = True):
-    if role_1 is None and role_2 is None and role_3 is None and role_4 is None:
+    if all(role is None for role in [role_1, role_2, role_3, role_4]) and interaction.guild:
         request = f'SELECT role_1 FROM auto_roles WHERE guild_id = {interaction.guild.id}'
     if interaction.guild and role_1 != None:
         # DB credentials
@@ -545,7 +543,6 @@ async def auto_role_setup(interaction: discord.Interaction, role_1: Optional[dis
             base_request_2 = ""
             base_request_3 = ""
             base_request_4 = ""
-            base_request_5 = ""
 
             request_end = f" WHERE guild_id = {interaction.guild.id}"
 
@@ -581,9 +578,6 @@ async def auto_role_setup(interaction: discord.Interaction, role_1: Optional[dis
         # Fermeture de la connexion et commit
         connexion.commit()
         connexion.close()
-
-        
-
 
 @client.tree.context_menu(name="Say")
 @app_commands.guild_only()
@@ -640,7 +634,7 @@ async def on_member_join(member: discord.Member):
         if result:
             if result[0]:
                 channel = member.guild.get_channel(result[0])
-        if channel:
+        if channel and channel.type == ChannelType.text:
             await channel.send(embed=emb)
         select_request = f"SELECT role_1, role_2, role_3, role_4 FROM auto_roles WHERE guild_id = {member.guild.id}"
         curseur.execute(select_request)
@@ -742,7 +736,7 @@ async def on_message(message: discord.Message):
             await send_typing_sleep_reply("coubaka! UwU", 1)
 
         if message.content.startswith(client.user.mention):
-            await send_typing_sleep_reply(random.choice(["https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png", discord.File("src/audio/HORN.mp3")]), 1)
+            await send_typing_sleep_reply(random.choice(["https://cdn.discordapp.com/attachments/928389065760464946/1131347327416795276/IMG_20210216_162154.png", "src/audio/HORN.mp3"]), 1)
 
         randcramptes1 = "cramptés ?".casefold()
         randcramptes2 = ["https://didnt-a.sk/", "https://tenor.com/bJniJ.gif", "[ok](https://cdn.discordapp.com/attachments/1139849206308278364/1142583449530683462/videoplayback.mp4)", "[.](https://cdn.discordapp.com/attachments/1130945537907114145/1139100471907336243/Untitled_video_-_Made_with_Clipchamp.mp4)", "tg"]
@@ -759,12 +753,12 @@ async def on_message(message: discord.Message):
                 vx_tiktok_resolver = str(message.content).replace('https://tiktok.com/', 'https://vxtiktok.com/').replace("https://vm.tiktok.com/","https://vm.vxtiktok.com/").replace("<h","h").replace("> "," ")
                 await message.channel.send(content=f"résolution du Tiktok envoyé par {message.author.display_name}[:]({vx_tiktok_resolver})")
                 await message.delete()
+        if message.guild:
+            if message.channel.id == 1190677993434124456 and message.attachments and random.randint(1, 50) == 1:
+                await message.add_reaction(random.choice(client.emojis))
 
-        if message.channel.id == 1190677993434124456 and message.attachments and random.randint(1, 50) == 1:
-            await message.add_reaction(random.choice(client.emojis))
-
-        if message.guild.id == 1181845184288411688 and message.channel.type == discord.ChannelType.news:
-            await message.publish()
+            if message.guild.id == 1181845184288411688 and message.channel.type == ChannelType.news:
+                await message.publish()
 
 @client.event
 async def on_ready():
