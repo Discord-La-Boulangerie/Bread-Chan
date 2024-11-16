@@ -1,19 +1,24 @@
 import datetime as dat
+import json
 import os
 import re
+from typing import Any, Optional, Union, cast
+
 import discord
-from discord import app_commands, Locale
+import mysql.connector as db
+import sqlalchemy
+from sqlalchemy.orm import Mapped, mapped_column
+from discord import Locale, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
-import mysql.connector as db
 from googletrans import Translator
 from googletrans.models import Translated
 
-import json
-from typing import Any, Union, cast, Optional
-
+from dataclass.dbTypes import Base
+from dataclass import dbTypes
 from sysModule import log
 
+""""""
 
 class BreadChan_Translator(app_commands.Translator):
     translator = Translator()
@@ -63,69 +68,38 @@ class SensitveClass:
             return None
         return BLAGUES_TOKEN
 
-    def get_db_credentials(self) -> Any:
-        load_dotenv()
-        CREDENTIALS = {
-            "host": os.getenv("db_host"),
-            "user": os.getenv("db_user"),
-            "password": os.getenv("db_password"),
-            "database": os.getenv("db_name")
-        }
-        if None in CREDENTIALS:
+    def get_db_credentials(self, db_type: str = 'mariadb'):
+        CREDENTIALS = dbTypes.Credentials()
+        if None in CREDENTIALS.to_dict():
             return None
-        return CREDENTIALS
+        else:
+            match db_type:
+                case 'sqlalchemy':
+                    return CREDENTIALS
+                case _:
+                    return CREDENTIALS.to_dict()
+
 
     def initialize_db(self, client: commands.Bot):
         # Connexion à la base de données
         try:
-            connexion = db.connect(**sensitiveClass.get_db_credentials())
+            credentials_provider = sensitiveClass.get_db_credentials()
+            if credentials_provider:
+                engine = sqlalchemy.create_engine(
+                    f"mariadb+mariadbconnector://{credentials_provider.user}:{credentials_provider.password}@{credentials_provider.host}:{credentials_provider.port}/{credentials_provider.database}")
         except db.Error as e:
             log(e)
-        else:
-            # Création des tables si elles n'existent pas déjà
-            tables_requests = [
-                "CREATE TABLE IF NOT EXISTS user_roles (role_id BIGINT PRIMARY KEY, user_id BIGINT, guild_id BIGINT, FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id))",
-                "CREATE TABLE IF NOT EXISTS guild_welc (guild_id BIGINT PRIMARY KEY, welcome_channel_id BIGINT, welcome_message VARCHAR(4000) NOT NULL DEFAULT 'Bienvenue sur {server_name} {member_name} !', enabled BOOLEAN NOT NULL DEFAULT FALSE, img_url VARCHAR(200), FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id))",
-                "CREATE TABLE IF NOT EXISTS guild_bye (guild_id BIGINT PRIMARY KEY, goodbye_channel_id BIGINT, goodbye_message VARCHAR(4000) NOT NULL DEFAULT '{member_name} a quitté le serveur, au revoir !', enabled BOOLEAN NOT NULL DEFAULT FALSE, img_url VARCHAR(200), FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id))",
-                "CREATE TABLE IF NOT EXISTS auto_roles (guild_id BIGINT PRIMARY KEY, role_1 BIGINT, role_2 BIGINT, role_3 BIGINT, role_4 BIGINT, enabled BOOLEAN NOT NULL DEFAULT FALSE, FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id))",
-                "CREATE TABLE IF NOT EXISTS epic_game_notifier (guild_id BIGINT PRIMARY KEY, enabled BOOLEAN NOT NULL DEFAULT FALSE, FOREIGN KEY (guild_id) REFERENCES guild_config(guild_id))",
-                "CREATE TABLE IF NOT EXISTS guild_config (guild_id BIGINT PRIMARY KEY, public BOOLEAN NOT NULL DEFAULT FALSE, word_react_enabled BOOLEAN NOT NULL DEFAULT FALSE, auto_post_enabled BOOLEAN NOT NULL DEFAULT FALSE, auto_post_channel BIGINT, one_msg_role_id BIGINT NOT NULL DEFAULT 0, one_msg_channel BOOLEAN NOT NULL DEFAULT 0)",
-                "CREATE TABLE IF NOT EXISTS wm_credentials (user_id BIGINT NOT NULL PRIMARY KEY, email VARCHAR(255) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL);"
-            ]
-
-            curseur = connexion.cursor()
-            guild_ids = [(guild.id,) for guild in client.guilds]
+            credentials_provider = sensitiveClass.get_db_credentials(
+                'sqlalchemy')
             try:
-                # Création des tables
-                for request in tables_requests:
-                    curseur.execute(request)
-                connexion.commit()
-
-                # Récupération des noms de toutes les tables dans la base de données "BreadChanDB"
-                curseur.execute(
-                    'SELECT table_name FROM information_schema.tables WHERE table_schema = "BreadChanDB"')
-                table_names: Any = curseur.fetchall()
-
-                # Liste des noms de tables à ignorer (comme la table guild_config)
-                ignored_tables = ['user_roles', 'guild_roles_type',
-                                  'guild_roles_mod', "user_profile"]
-
-                # Insertion des guildes dans chaque table prenant en paramètre guild_id
-                for table in table_names:
-                    table_name = table[0]
-                    if table_name not in ignored_tables:
-                        insert_query = f"INSERT IGNORE INTO {table_name} (guild_id) VALUES (%s)"
-                        curseur.executemany(insert_query, guild_ids)
-                connexion.commit()
-
-            except Exception as e:
+                if credentials_provider:
+                    Base.metadata.create_all(engine)
+            except sqlalchemy.exc.SQLAlchemyError as e:
                 log(e)
-                connexion.rollback()
-
-            finally:
-                if connexion:
-                    connexion.close()
-
+            else:
+                pass
+        else:
+            Base.metadata.create_all(engine)
 
 sensitiveClass = SensitveClass()
 
