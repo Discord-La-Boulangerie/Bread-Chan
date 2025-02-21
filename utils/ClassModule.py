@@ -7,16 +7,13 @@ from typing import Any, Optional, Union, cast
 import discord
 import mysql.connector as db
 import sqlalchemy
-from sqlalchemy.orm import Mapped, mapped_column
 from discord import Locale, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from googletrans import Translator
 from googletrans.models import Translated
+from sqlalchemy.orm import Mapped, mapped_column
 
-from dataclass.dbTypes import Base
-from dataclass import dbTypes
-from sysModule import log
 
 """"""
 
@@ -38,7 +35,7 @@ class BreadChan_Translator(app_commands.Translator):
                     translated = self.translator.translate(
                         string, dest=outputLangCode)
                 except Exception as e:
-                    log(e)
+
                     pass
                 else:
                     if isinstance(translated, Translated):
@@ -72,12 +69,11 @@ class SensitveClass:
         CREDENTIALS = dbTypes.Credentials()
         if None in CREDENTIALS.to_dict():
             return None
-        else:
-            match db_type:
-                case 'sqlalchemy':
-                    return CREDENTIALS
-                case _:
-                    return CREDENTIALS.to_dict()
+        match db_type:
+            case 'sqlalchemy':
+                return CREDENTIALS
+            case _:
+                return CREDENTIALS.to_dict()
 
 
     def initialize_db(self, client: commands.Bot):
@@ -88,14 +84,14 @@ class SensitveClass:
                 engine = sqlalchemy.create_engine(
                     f"mariadb+mariadbconnector://{credentials_provider.user}:{credentials_provider.password}@{credentials_provider.host}:{credentials_provider.port}/{credentials_provider.database}")
         except db.Error as e:
-            log(e)
+
             credentials_provider = sensitiveClass.get_db_credentials(
                 'sqlalchemy')
             try:
                 if credentials_provider:
                     Base.metadata.create_all(engine)
             except sqlalchemy.exc.SQLAlchemyError as e:
-                log(e)
+                pass
             else:
                 pass
         else:
@@ -115,7 +111,7 @@ class LoginModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
 
-        connexion = db.connect(**sensitiveClass.get_db_credentials())
+        connexion = db.connect(**sensitiveClass.get_db_credentials().to_dict())
         cursor = connexion.cursor()
         # Insertion des identifiants dans la base de données
         cursor.execute('''
@@ -129,7 +125,7 @@ class LoginModal(discord.ui.Modal):
         connexion.close()
 
 
-class Say(discord.ui.Modal, title="contenu du reply"):
+class SayModal(discord.ui.Modal, title="contenu du reply"):
     def __init__(self, msg: discord.Message):
         self.msg = msg
         super().__init__()
@@ -375,7 +371,7 @@ class ByeModal(discord.ui.Modal):
 
 
 class ButtonView(discord.ui.View):
-    def __init__(self, url: str, user: discord.User, timeout: float | None = 180):
+    def __init__(self, url: str, user: Union[discord.User, discord.Member], timeout: float | None = 180):
         super().__init__(timeout=timeout)
         self.add_item(discord.ui.Button(style=discord.ButtonStyle.url,
                       label=f"Photo de profil de {user.name}", url=url))

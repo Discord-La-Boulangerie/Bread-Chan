@@ -1,12 +1,12 @@
-from typing import Any
-import discord
-from discord.ext import tasks
-from discord import ChannelType, Color
-import json
-import mysql.connector as db
 import datetime as dat
-import pytz
+import json
+from typing import Any
 
+import discord
+import mysql.connector as db
+import pytz
+from discord import ChannelType, Color
+from discord.ext import tasks
 
 # Utiliser le fuseau horaire pour la France (Europe/Paris)
 timezone_fr = pytz.timezone('Europe/Paris')
@@ -14,7 +14,7 @@ timezone_fr = pytz.timezone('Europe/Paris')
 now_in_fr = dat.datetime.now(timezone_fr)
 
 @tasks.loop(minutes=5)
-async def ReloadPresence(client: discord.Client):
+async def reload_presence(client: discord.Client):
     """Change the bot's presence every 5 minutes"""
     state = discord.Activity(type=discord.ActivityType.watching,name=f"{len(client.guilds)} serveurs")
     await client.change_presence(activity=state)
